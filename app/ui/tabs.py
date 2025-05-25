@@ -20,7 +20,7 @@ class TabManager:
         1. **Select Department** - each department has its own set of categories
         2. **Select Account Type**  - used for the category composition analysis
         3. **Select Category**  - used for detailed forecasting
-        4. **Set Forecast Period** (sidebar) - Used to select how many months to forecast
+        4. **Set Forecast Period** - Used to select how many months to forecast
 
         ### Forecasting Metrics
         The accuracy of the forecasting model is measured using the Mean Absolute Percentage Error (MAPE). MAPE calculates the average absolute percentage error between the predicted values and the actual values. The accuracy is then calculated as \( \text{Accuracy} = 100 - (\text{MAPE}) \). A lower MAPE value indicates a more accurate model.

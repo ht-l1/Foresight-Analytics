@@ -71,6 +71,14 @@ class DatabaseManager:
         except Exception as e:
             self.session.rollback()
             raise Exception(f"Database insert failed: {str(e)}")
+        
+    def has_data(self) -> bool:
+        """Quick check if database has any data"""
+        try:
+            count = self.session.query(Transaction).count()
+            return count > 0
+        except Exception as e:
+            raise Exception(f"Database check failed: {str(e)}")
     
     def get_all_transactions(self) -> pd.DataFrame:
         """Get all transactions as DataFrame"""

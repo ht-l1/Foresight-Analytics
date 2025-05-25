@@ -17,11 +17,13 @@ def initialize_app():
     try:
         data_loader = get_data_loader()
         
-        # Initialize database with CSV data
-        csv_path = 'data/managerial_accounting.csv'
-        if not data_loader.initialize_database(csv_path):
-            st.error("Failed to initialize database. Please check the data file.")
-            return None
+        # Quick check if database has data
+        if not data_loader.check_data_exists():
+            # Initialize database with CSV data only if empty
+            csv_path = 'data/managerial_accounting.csv'
+            if not data_loader.initialize_database(csv_path):
+                st.error("Failed to initialize database. Please check the data file.")
+                return None
         
         return data_loader
         
@@ -45,14 +47,17 @@ def main():
     if not data_loader:
         st.stop()
 
-    # Get all data for sidebar
-    df = data_loader.get_all_data()
-    if df.empty:
+    # Get basic info for sidebar (NOT full dataset)
+    departments = data_loader.get_departments()
+    categories = data_loader.get_categories()
+
+    if not departments:
         st.error("No data available. Please check your database.")
         st.stop()
 
     # Render sidebar
-    department, category, account_type, months = Sidebar.render(df)
+    data_info = data_loader.get_data_info()
+    department, category, account_type, months = Sidebar.render(departments, categories, data_info)
     
     if not department:
         st.warning("Please select filters from the sidebar to view data.")

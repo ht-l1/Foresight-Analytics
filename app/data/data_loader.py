@@ -65,6 +65,14 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Failed to get all data: {str(e)}")
             return pd.DataFrame()
+        
+    def check_data_exists(self) -> bool:
+        """Quick check if database has data without loading it"""
+        try:
+            return self.db_manager.has_data()
+        except Exception as e:
+            logger.error(f"Failed to check data existence: {str(e)}")
+            return False
     
     def filter_by_department(self, department: str) -> pd.DataFrame:
         """Filter data by department from database"""
