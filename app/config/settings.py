@@ -27,7 +27,7 @@ class AppConfig:
     # Data Settings
     DEFAULT_FORECAST_MONTHS = 6
     MIN_FORECAST_MONTHS = 1
-    MAX_FORECAST_MONTHS = 12
+    MAX_FORECAST_MONTHS = 24
     
     # Account Type Mappings
     ACCOUNT_TYPE_MAPPING: Dict[str, List[str]] = {
