@@ -15,8 +15,8 @@ class AppConfig:
     PAGE_LAYOUT = "wide"
 
     # Visualization Settings
-    PLOT_WIDTH = 12
-    PLOT_HEIGHT = 8
+    PLOT_WIDTH = 10
+    PLOT_HEIGHT = 4
     
     COLORS = {
     'primary': '#1f77b4',

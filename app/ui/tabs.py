@@ -12,26 +12,15 @@ class TabManager:
         self.forecaster = Forecaster()
     
     def render_overview(self):
-        st.header("Welcome to Foresight Analytics")
+        st.header("Foresight Analytics")
         st.markdown("""
-        This website helps analyze financial trends and generate forecasts across different departments and categories.
+        Advanced Financial Forecasting & Analytics Platform
         
-        ### How to Use This website:
-        1. **Select Department** (sidebar)
-           - Choose the department you want to analyze
-           - Each department has its own set of categories
-
-        2. **Select Account Type** (sidebar)
-           - Choose the account type you want to analyze (Assets, Liabilities, Expenses, Revenue)
-           - This will be used for the category composition analysis
-                   
-        3. **Select Category** (sidebar)
-           - Pick a specific category within the chosen department
-           - This will be used for detailed forecasting
-        
-        4. **Set Forecast Period** (sidebar)
-           - Use the slider to select how many months to forecast
-           - Range: 1-12 months  
+        #### How to Use the sidebar:
+        1. **Select Department** - each department has its own set of categories
+        2. **Select Account Type**  - used for the category composition analysis
+        3. **Select Category**  - used for detailed forecasting
+        4. **Set Forecast Period** - Used to select how many months to forecast
 
         ### Forecasting Metrics
         The accuracy of the forecasting model is measured using the Mean Absolute Percentage Error (MAPE). MAPE calculates the average absolute percentage error between the predicted values and the actual values. The accuracy is then calculated as \( \text{Accuracy} = 100 - (\text{MAPE}) \). A lower MAPE value indicates a more accurate model.
