@@ -7,11 +7,43 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# @st.cache_resource
+# def get_data_loader():
+#     """Cached data loader instance"""
+#     return DataLoader()
+
+# Implementing caching
+
 @st.cache_resource
 def get_data_loader():
     """Cached data loader instance"""
     return DataLoader()
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_departments_cached():
+    """Cached departments list"""
+    data_loader = get_data_loader()
+    return data_loader.get_departments()
+
+@st.cache_data(ttl=3600)
+def get_categories_cached():
+    """Cached categories list"""
+    data_loader = get_data_loader()
+    return data_loader.get_categories()
+
+@st.cache_data(ttl=1800)  # Cache for 30 minutes
+def get_data_info_cached():
+    """Cached data info"""
+    data_loader = get_data_loader()
+    return data_loader.get_data_info()
+
+@st.cache_data(ttl=600)  # Cache for 10 minutes
+def get_department_data_cached(department: str):
+    """Cached department-specific data"""
+    data_loader = get_data_loader()
+    return data_loader.filter_by_department(department)
+
+# app initializor 
 def initialize_app():
     """Initialize the application"""
     try:
@@ -48,15 +80,23 @@ def main():
         st.stop()
 
     # Get basic info for sidebar (NOT full dataset)
-    departments = data_loader.get_departments()
-    categories = data_loader.get_categories()
+    # departments = data_loader.get_departments()
+    # categories = data_loader.get_categories()
+
+    # Instead of above, get cached basic info for sidebar
+    # Get cached basic info for sidebar
+    departments = get_departments_cached()
+    categories = get_categories_cached()
 
     if not departments:
         st.error("No data available. Please check your database.")
         st.stop()
 
     # Render sidebar
-    data_info = data_loader.get_data_info()
+    # data_info = data_loader.get_data_info()
+
+    # Render sidebar with cached data
+    data_info = get_data_info_cached()
     department, category, account_type, months = Sidebar.render(departments, categories, data_info)
     
     if not department:
@@ -64,7 +104,10 @@ def main():
         st.stop()
 
     # Get filtered data
-    dept_data = data_loader.filter_by_department(department)
+    # dept_data = data_loader.filter_by_department(department)
+
+    # Get cached filtered data
+    dept_data = get_department_data_cached(department)
 
     if dept_data.empty:
         st.error(f"No data found for department: {department}")
@@ -81,14 +124,24 @@ def main():
         "Forecast", 
         "Raw Data"
     ])
-   
+
+    # Add cache status indicator in sidebar
+    with st.sidebar:
+        if st.button("🔄 Clear Cache"):
+            st.cache_data.clear()
+            st.rerun()
+        
+        # Show cache status
+        st.caption("Cache Status: Active ✅")
+        
     with tabs[0]:
         tab_manager.render_overview()
 
         # Add data summary
         st.subheader("Data Summary")
-        data_info = data_loader.get_data_info()
-        
+        # data_info = data_loader.get_data_info()
+        data_info = get_data_info_cached()
+
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Records", f"{data_info.get('total_records', 0):,}")
