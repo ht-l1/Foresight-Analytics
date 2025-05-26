@@ -19,9 +19,11 @@
         - Without Caching: Department change → 2.1s load time
         - With Caching: Department change → 0.3s load time
 
-## Run Locally
+## Running Locally
 For winsows
+- `git clone https://github.com/ht-l1/Foresight-Analytics.git`
 - `.\venv\Scripts\activate`
+- `pip install -r requirements.txt`
 - `streamlit run run.py`
 
 ## Tech Stacks Used
