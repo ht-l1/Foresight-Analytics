@@ -19,7 +19,12 @@
         - Without Caching: Department change → 2.1s load time
         - With Caching: Department change → 0.3s load time
 
-## Tech Stacks Used:
+## Run Locally
+For winsows
+- `.\venv\Scripts\activate`
+- `streamlit run run.py`
+
+## Tech Stacks Used
 <!-- https://github.com/inttter/md-badges -->
 Core: 
 [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#)
