@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,11 +11,10 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Import backend
+from app.config.settings import AppConfig
 from app.data.data_loader import DataLoader
 from app.models.forecaster import Forecaster
 from app.utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 # theme config
 st.set_page_config(
@@ -21,6 +22,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+load_dotenv()
+
+# debug statement - hiding
+# st.write(f"DEBUG: DATABASE_MODE = {os.getenv('DATABASE_MODE')}")
+
+logger = get_logger(__name__)
 
 # Custom CSS for dark theme
 st.markdown("""
@@ -319,13 +327,17 @@ def main():
         forecast_months = st.slider(
             "Forecast Months",
             min_value=1,
-            max_value=24,
-            value=12,
+            max_value=48,
+            value=24,
             help="Number of months to forecast ahead"
         )
         
         # st.markdown("---")
-        
+
+        # Check and display data source
+        data_source = "Cloud (Supabase)" if AppConfig.is_cloud_mode() else "Local (SQLite)"
+        st.markdown(f"<h3 style='color: #00d4ff;'>Data Source: {data_source}</h3>", unsafe_allow_html=True)
+
         # Data info
         st.markdown("### Data Overview")
         st.info(f"""

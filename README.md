@@ -46,3 +46,35 @@ Database:
 Visualization: <img src="https://matplotlib.org/_static/logo2.svg" width="80" alt="Matplotlib Logo">
 <img src="https://raw.githubusercontent.com/mwaskom/seaborn/master/doc/_static/logo-wide-lightbg.svg" width="80" alt="Seaborn Logo">
 <!-- [![Matplotlib](https://custom-icon-badges.demolab.com/badge/Matplotlib-71D291?logo=matplotlib&logoColor=fff)](#) -->
+
+
+```
+Foresight-Analytics
+├─ app
+│  ├─ config
+│  │  ├─ settings.py
+│  │  └─ __init__.py
+│  ├─ data
+│  │  ├─ data_loader.py
+│  │  ├─ test_supabase.py
+│  │  └─ __init__.py
+│  ├─ database
+│  │  ├─ models.py
+│  │  └─ supabase_manager.py
+│  ├─ models
+│  │  ├─ forecaster.py
+│  │  └─ __init__.py
+│  ├─ utils
+│  │  ├─ logger.py
+│  │  ├─ validators.py
+│  │  └─ __init__.py
+│  └─ __init__.py
+├─ data
+│  ├─ foresight_analytics.db
+│  └─ train.csv
+├─ LICENSE
+├─ README.md
+├─ requirements.txt
+└─ run.py
+
+```
