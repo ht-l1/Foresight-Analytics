@@ -69,8 +69,8 @@ class Forecaster:
     def forecast(self, data: pd.DataFrame, months: int) -> dict:
         """Generate forecasts for multiple models"""
         try:
-            if months < 1 or months > 24:
-                raise ValueError("Forecast months must be between 1 and 24")
+            if months < 1 or months > 48:
+                raise ValueError("Forecast months must be between 1 and 48")
             
             # Prepare data
             X, y, monthly_totals, prophet_df = self.prepare_data(data)
