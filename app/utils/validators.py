@@ -7,8 +7,7 @@ logger = get_logger(__name__)
 
 class DataValidator:
     """Data validation and quality checks"""
-    
-    REQUIRED_COLUMNS = ['Transaction Date', 'Transaction Amount', 'Department', 'Category']
+    REQUIRED_COLUMNS = ['Row ID', 'Order Date', 'Sales', 'Region', 'Category', 'Sub-Category', 'Segment', 'Product Name', 'Ship Mode', 'Customer Name', 'City', 'State', 'Postal Code']
     
     @classmethod
     def validate_dataframe(cls, df: pd.DataFrame) -> Dict[str, Any]:
@@ -49,26 +48,24 @@ class DataValidator:
                         )
             
             # Validate data types
-            if 'Transaction Date' in df.columns:
-                if not pd.api.types.is_datetime64_any_dtype(df['Transaction Date']):
+            if 'Order Date' in df.columns:
+                if not pd.api.types.is_datetime64_any_dtype(df['Order Date']):
                     validation_results['warnings'].append(
-                        "Transaction Date column is not datetime type"
+                        "Order Date column is not datetime type"
                     )
             
-            if 'Transaction Amount' in df.columns:
-                if not pd.api.types.is_numeric_dtype(df['Transaction Amount']):
+            if 'Sales' in df.columns:
+                if not pd.api.types.is_numeric_dtype(df['Sales']):
                     validation_results['is_valid'] = False
                     validation_results['errors'].append(
-                        "Transaction Amount column is not numeric"
+                        "Sales column is not numeric"
                     )
-            
-            # Check for reasonable data ranges
-            if 'Transaction Amount' in df.columns and pd.api.types.is_numeric_dtype(df['Transaction Amount']):
-                negative_count = (df['Transaction Amount'] < 0).sum()
-                if negative_count > len(df) * 0.8:  # More than 80% negative values
-                    validation_results['warnings'].append(
-                        f"High number of negative transaction amounts: {negative_count}"
-                    )
+                else:
+                    negative_count = (df['Sales'] < 0).sum()
+                    if negative_count > 0:
+                        validation_results['warnings'].append(
+                            f"Sales column has {negative_count} negative values"
+                        )
             
             logger.info(f"Data validation completed. Valid: {validation_results['is_valid']}")
             
@@ -87,25 +84,23 @@ class DataValidator:
         try:
             df_clean = df.copy()
             
-            # Convert Transaction Date to datetime
-            if 'Transaction Date' in df_clean.columns:
-                if not pd.api.types.is_datetime64_any_dtype(df_clean['Transaction Date']):
-                    df_clean['Transaction Date'] = pd.to_datetime(df_clean['Transaction Date'])
+            # Ensure Order Date is datetime
+            if 'Order Date' in df_clean.columns:
+                if not pd.api.types.is_datetime64_any_dtype(df_clean['Order Date']):
+                    df_clean['Order Date'] = pd.to_datetime(df_clean['Order Date'], format='%d/%m/%Y')
             
-            # Remove rows with null Transaction Amount
-            if 'Transaction Amount' in df_clean.columns:
+            # Remove rows with null Sales
+            if 'Sales' in df_clean.columns:
                 initial_count = len(df_clean)
-                df_clean = df_clean.dropna(subset=['Transaction Amount'])
+                df_clean = df_clean.dropna(subset=['Sales'])
                 removed_count = initial_count - len(df_clean)
-                
                 if removed_count > 0:
-                    logger.warning(f"Removed {removed_count} rows with null Transaction Amount")
+                    logger.warning(f"Removed {removed_count} rows with null Sales")
             
             # Strip whitespace from string columns
             string_columns = df_clean.select_dtypes(include=['object']).columns
             for col in string_columns:
-                if col != 'Transaction Date':  # Skip datetime columns
-                    df_clean[col] = df_clean[col].astype(str).str.strip()
+                df_clean[col] = df_clean[col].astype(str).str.strip()
             
             logger.info(f"Data cleaning completed. Rows: {len(df_clean)}")
             return df_clean

@@ -7,7 +7,7 @@ class AppConfig:
     
     # Application Settings
     APP_NAME = "Foresight Analytics"
-    VERSION = "1.0.0"
+    VERSION = "2.0.0"
     # Important! Set to false after ready to deploy to prod
     DEBUG = True
     
@@ -28,15 +28,7 @@ class AppConfig:
     DEFAULT_FORECAST_MONTHS = 6
     MIN_FORECAST_MONTHS = 1
     MAX_FORECAST_MONTHS = 24
-    
-    # Account Type Mappings
-    ACCOUNT_TYPE_MAPPING: Dict[str, List[str]] = {
-        'Assets': ['Assets'],
-        'Liabilities': ['Loans'],
-        'Expenses': ['Salaries', 'Supplies', 'Utilities', 'Rent', 'Royalties'],
-        'Revenue': ['Product Sales', 'Service Revenue']
-    }
-    
+
     # Model Settings
     MODEL_ACCURACY_THRESHOLD = 70.0  # Minimum acceptable accuracy percentage
     
@@ -49,11 +41,6 @@ class AppConfig:
     BASE_DIR = Path(__file__).parent.parent.parent
     DATA_DIR = BASE_DIR / "data"
     LOGS_DIR = BASE_DIR / "logs"
-    
-    @classmethod
-    def get_account_categories(cls, account_type: str) -> List[str]:
-        """Get categories for a specific account type"""
-        return cls.ACCOUNT_TYPE_MAPPING.get(account_type, [])
     
     @classmethod
     def setup_directories(cls):

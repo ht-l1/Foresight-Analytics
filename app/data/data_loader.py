@@ -3,7 +3,12 @@ from pathlib import Path
 from app.database.models import DatabaseManager
 from app.utils.logger import get_logger
 from app.utils.validators import DataValidator
+import os
+import streamlit as st
+from dotenv import load_dotenv
+import kaggle
 
+load_dotenv()
 logger = get_logger(__name__)
 
 class DataLoader:
@@ -12,48 +17,53 @@ class DataLoader:
     def __init__(self):
         self.db_manager = DatabaseManager()
         self.validator = DataValidator()
-    
-    def load_data_from_csv(self, file_path: str) -> pd.DataFrame:
-        """Load data from CSV file"""
+
+    def load_superstore_data(self) -> pd.DataFrame:
+        """Load Superstore data via Kaggle API or local file"""
         try:
-            if not Path(file_path).exists():
-                raise FileNotFoundError(f"File not found: {file_path}")
+            # Check if train.csv exists locally
+            local_path = "data/train.csv"
+            if Path(local_path).exists():
+                logger.info("Loading local train.csv")
+                df = pd.read_csv(local_path)
+            else:
+                # Download from Kaggle
+                kaggle.api.authenticate()
+                kaggle.api.dataset_download_file(
+                    'rohitsahoo/sales-forecasting', 
+                    'train.csv', 
+                    path='data/'
+                )
+                df = pd.read_csv('data/train.csv')
             
-            df = pd.read_csv(file_path)
-            df['Transaction Date'] = pd.to_datetime(df['Transaction Date'])
+            # Convert dates
+            df['Order Date'] = pd.to_datetime(df['Order Date'], format='%d/%m/%Y')
+            df['Ship Date'] = pd.to_datetime(df['Ship Date'], format='%d/%m/%Y')
             
-            # Validate data
-            validation_results = self.validator.validate_dataframe(df)
-            if not validation_results['is_valid']:
-                logger.error(f"Data validation failed: {validation_results['errors']}")
-                raise ValueError("Invalid data format")
+            # Validate required columns
+            required_columns = ['Row ID', 'Order Date', 'Sales', 'Region', 'Category', 
+                              'Sub-Category', 'Segment', 'Ship Mode', 'Product Name', 
+                              'City', 'State', 'Postal Code']
+            if not all(col in df.columns for col in required_columns):
+                raise ValueError("Missing required columns")
             
-            # Clean data
-            df = self.validator.clean_dataframe(df)
-            
-            logger.info(f"Loaded {len(df)} records from CSV: {file_path}")
+            logger.info(f"Loaded {len(df)} Superstore records")
             return df
-            
         except Exception as e:
-            logger.error(f"Failed to load CSV data: {str(e)}")
+            logger.error(f"Failed to load Superstore data: {str(e)}")
             raise
     
-    def initialize_database(self, csv_file_path: str) -> bool:
-        """Initialize database with CSV data"""
+    def initialize_database(self) -> bool:
+        """Initialize database with Superstore data"""
         try:
-            # Check if database already has data
-            existing_data = self.db_manager.get_all_transactions()
-            if not existing_data.empty:
-                logger.info("Database already contains data. Skipping initialization.")
+            if self.db_manager.has_data():
+                logger.info("Database already contains data")
                 return True
             
-            # Load and insert CSV data
-            df = self.load_data_from_csv(csv_file_path)
+            df = self.load_superstore_data()
             records_inserted = self.db_manager.insert_dataframe(df)
-            
             logger.info(f"Database initialized with {records_inserted} records")
             return True
-            
         except Exception as e:
             logger.error(f"Database initialization failed: {str(e)}")
             return False
@@ -73,21 +83,29 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Failed to check data existence: {str(e)}")
             return False
-    
-    def filter_by_department(self, department: str) -> pd.DataFrame:
-        """Filter data by department from database"""
+
+    def filter_by_region(self, region: str) -> pd.DataFrame:
+        """Filter data by region from database"""
         try:
-            return self.db_manager.filter_by_department(department)
+            return self.db_manager.filter_by_region(region)
         except Exception as e:
-            logger.error(f"Failed to filter by department: {str(e)}")
+            logger.error(f"Failed to filter by region: {str(e)}")
             return pd.DataFrame()
     
-    def get_departments(self) -> list:
-        """Get available departments"""
+    def get_regions(self) -> list:
+        """Get available regions"""
         try:
-            return self.db_manager.get_departments()
+            return self.db_manager.get_regions()
         except Exception as e:
-            logger.error(f"Failed to get departments: {str(e)}")
+            logger.error(f"Failed to get regions: {str(e)}")
+            return []
+    
+    def get_segments(self) -> list:
+        """Get available segments"""
+        try:
+            return self.db_manager.get_segments()
+        except Exception as e:
+            logger.error(f"Failed to get segments: {str(e)}")
             return []
     
     def get_categories(self) -> list:
@@ -97,23 +115,14 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Failed to get categories: {str(e)}")
             return []
-    
-    def get_data_info(self) -> dict:
-        """Get basic data information"""
-        try:
-            df = self.get_all_data()
-            if df.empty:
-                return {"total_records": 0, "date_range": "No data"}
-            
-            return {
-                "total_records": len(df),
-                "date_range": f"{df['Transaction Date'].min().strftime('%Y-%m-%d')} to {df['Transaction Date'].max().strftime('%Y-%m-%d')}",
-                "departments": len(self.get_departments()),
-                "categories": len(self.get_categories())
-            }
-        except Exception as e:
-            logger.error(f"Failed to get data info: {str(e)}")
-            return {"error": str(e)}
+        
+    def get_data_info(self):
+        # Return summary info (like record counts)
+        return {
+            "total_records": len(self.get_all_data()),
+            "regions": len(self.get_regions()),
+            "categories": len(self.get_categories())
+        }
     
     def close(self):
         """Close database connections"""
