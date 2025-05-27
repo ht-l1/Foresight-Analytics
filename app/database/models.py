@@ -7,28 +7,52 @@ from pathlib import Path
 
 Base = declarative_base()
 
-# Define the table structure
 class Transaction(Base):
-    """Transaction model for database storage"""
+    """Transaction model for Superstore dataset"""
     __tablename__ = 'transactions'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    transaction_date = Column(DateTime, nullable=False)
-    transaction_amount = Column(Float, nullable=False)
-    department = Column(String(100), nullable=False)
+    row_id = Column(Integer, nullable=False)
+    order_id = Column(String(50), nullable=False)
+    order_date = Column(DateTime, nullable=False)
+    ship_date = Column(DateTime, nullable=False)
+    ship_mode = Column(String(50), nullable=False)
+    customer_id = Column(String(50), nullable=False)
+    customer_name = Column(String(100), nullable=False)
+    segment = Column(String(50), nullable=False)
+    country = Column(String(50), nullable=False)
+    city = Column(String(100), nullable=False)
+    state = Column(String(50), nullable=False)
+    postal_code = Column(String(20), nullable=True)
+    region = Column(String(50), nullable=False)
+    product_id = Column(String(50), nullable=False)
     category = Column(String(100), nullable=False)
-    account_type = Column(String(50), nullable=True)
+    sub_category = Column(String(100), nullable=False)
+    product_name = Column(String(200), nullable=False)
+    sales = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     def to_dict(self):
         """Convert model instance to dictionary"""
         return {
-            'id': self.id,
-            'transaction_date': self.transaction_date,
-            'transaction_amount': self.transaction_amount,
-            'department': self.department,
+            'row_id': self.row_id,
+            'order_id': self.order_id,
+            'order_date': self.order_date,
+            'ship_date': self.ship_date,
+            'ship_mode': self.ship_mode,
+            'customer_id': self.customer_id,
+            'customer_name': self.customer_name,
+            'segment': self.segment,
+            'country': self.country,
+            'city': self.city,
+            'state': self.state,
+            'postal_code': self.postal_code,
+            'region': self.region,
+            'product_id': self.product_id,
             'category': self.category,
-            'account_type': self.account_type,
+            'sub_category': self.sub_category,
+            'product_name': self.product_name,
+            'sales': self.sales,
             'created_at': self.created_at
         }
 
@@ -48,24 +72,36 @@ class DatabaseManager:
         self.session = Session()
     
     def insert_dataframe(self, df: pd.DataFrame) -> int:
-        """Insert DataFrame into database"""
+        """Insert Superstore DataFrame into database"""
         try:
-            # Map DataFrame columns to model
             transactions = []
             for _, row in df.iterrows():
                 transaction = Transaction(
-                    transaction_date=pd.to_datetime(row['Transaction Date']),
-                    transaction_amount=float(row['Transaction Amount']),
-                    department=str(row['Department']),
+                    row_id=int(row['Row ID']),
+                    order_id=str(row['Order ID']),
+                    order_date=pd.to_datetime(row['Order Date'], format='%d/%m/%Y'),
+                    ship_date=pd.to_datetime(row['Ship Date'], format='%d/%m/%Y'),
+                    # order_date=pd.to_datetime(row['Order Date']),
+                    # ship_date=pd.to_datetime(row['Ship Date']),
+                    ship_mode=str(row['Ship Mode']),
+                    customer_id=str(row['Customer ID']),
+                    customer_name=str(row['Customer Name']),
+                    segment=str(row['Segment']),
+                    country=str(row['Country']),
+                    city=str(row['City']),
+                    state=str(row['State']),
+                    postal_code=str(row['Postal Code']) if pd.notna(row['Postal Code']) else None,
+                    region=str(row['Region']),
+                    product_id=str(row['Product ID']),
                     category=str(row['Category']),
-                    account_type=self._get_account_type(row['Category'])
+                    sub_category=str(row['Sub-Category']),
+                    product_name=str(row['Product Name']),
+                    sales=float(row['Sales'])
                 )
                 transactions.append(transaction)
             
-            # Bulk insert
             self.session.bulk_save_objects(transactions)
             self.session.commit()
-            
             return len(transactions)
             
         except Exception as e:
@@ -84,82 +120,55 @@ class DatabaseManager:
         """Get all transactions as DataFrame"""
         try:
             query = self.session.query(Transaction).all()
-            
             if not query:
                 return pd.DataFrame()
             
             data = [t.to_dict() for t in query]
             df = pd.DataFrame(data)
             
-            # Rename columns to match original format
-            df = df.rename(columns={
-                'transaction_date': 'Transaction Date',
-                'transaction_amount': 'Transaction Amount',
-                'department': 'Department',
-                'category': 'Category'
-            })
-            
-            return df[['Transaction Date', 'Transaction Amount', 'Department', 'Category']]
-            
+            return df[['row_id', 'order_date', 'sales', 'region', 'category', 'sub_category', 'segment', 'ship_mode', 'product_name', 'city', 'state', 'postal_code']]
         except Exception as e:
             raise Exception(f"Database query failed: {str(e)}")
     
-    def filter_by_department(self, department: str) -> pd.DataFrame:
-        """Filter transactions by department"""
+    def filter_by_region(self, region: str) -> pd.DataFrame:
+        """Filter by region"""
         try:
             query = self.session.query(Transaction).filter(
-                Transaction.department == department
+                Transaction.region == region
             ).all()
             
             if not query:
                 return pd.DataFrame()
             
             data = [t.to_dict() for t in query]
-            df = pd.DataFrame(data)
-            
-            df = df.rename(columns={
-                'transaction_date': 'Transaction Date',
-                'transaction_amount': 'Transaction Amount',
-                'department': 'Department',
-                'category': 'Category'
-            })
-            
-            return df[['Transaction Date', 'Transaction Amount', 'Department', 'Category']]
-            
+            return pd.DataFrame(data)
         except Exception as e:
             raise Exception(f"Database filter failed: {str(e)}")
-    
-    def get_departments(self) -> list:
-        """Get unique departments"""
+
+    def get_regions(self) -> list:
+        """Get unique regions"""
         try:
-            result = self.session.query(Transaction.department).distinct().all()
-            return [dept[0] for dept in result]
+            result = self.session.query(Transaction.region).distinct().all()
+            return [region[0] for region in result]
         except Exception as e:
-            raise Exception(f"Failed to get departments: {str(e)}")
-    
+            raise Exception(f"Failed to get regions: {str(e)}")
+
+    def get_segments(self) -> list:
+        """Get unique segments"""
+        try:
+            result = self.session.query(Transaction.segment).distinct().all()
+            return [segment[0] for segment in result]
+        except Exception as e:
+            raise Exception(f"Failed to get segments: {str(e)}")
+
     def get_categories(self) -> list:
         """Get unique categories"""
         try:
             result = self.session.query(Transaction.category).distinct().all()
-            return [cat[0] for cat in result]
+            return [category[0] for category in result]
         except Exception as e:
             raise Exception(f"Failed to get categories: {str(e)}")
-    
-    def _get_account_type(self, category: str) -> str:
-        """Map category to account type"""
-        account_mapping = {
-            'Assets': 'Assets',
-            'Loans': 'Liabilities',
-            'Salaries': 'Expenses',
-            'Supplies': 'Expenses',
-            'Utilities': 'Expenses',
-            'Rent': 'Expenses',
-            'Royalties': 'Expenses',
-            'Product Sales': 'Revenue',
-            'Service Revenue': 'Revenue'
-        }
-        return account_mapping.get(category, 'Unknown')
-    
+
     def close(self):
         """Close database session"""
         self.session.close()
