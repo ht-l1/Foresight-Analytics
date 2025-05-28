@@ -32,6 +32,9 @@ For winsows
 - `pip install -r requirements.txt`
 - `streamlit run run.py`
 
+FastAPI
+- `uvicorn app.api.main:app --reload`
+
 ## Tech Stacks Used
 <!-- https://github.com/inttter/md-badges -->
 Core: 
@@ -46,11 +49,12 @@ Database:
 Visualization: <img src="https://matplotlib.org/_static/logo2.svg" width="80" alt="Matplotlib Logo">
 <img src="https://raw.githubusercontent.com/mwaskom/seaborn/master/doc/_static/logo-wide-lightbg.svg" width="80" alt="Seaborn Logo">
 <!-- [![Matplotlib](https://custom-icon-badges.demolab.com/badge/Matplotlib-71D291?logo=matplotlib&logoColor=fff)](#) -->
-
-
 ```
 Foresight-Analytics
 ├─ app
+│  ├─ api
+│  │  ├─ main.py
+│  │  └─ __init__.py
 │  ├─ config
 │  │  ├─ settings.py
 │  │  └─ __init__.py
@@ -75,6 +79,7 @@ Foresight-Analytics
 ├─ LICENSE
 ├─ README.md
 ├─ requirements.txt
-└─ run.py
+├─ run.py
+└─ test.html
 
 ```

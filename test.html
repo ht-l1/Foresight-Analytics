@@ -1,0 +1,308 @@
+<!-- setting up a CORS debug tool -->
+<!-- to run this for testing cors purpose, in terminal do "http-server -p 3000" -->
+<!-- Look in web console -->
+ 
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .header-info { font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CORS Debug Tool</h1>
+        
+        <div class="section">
+            <h3>Test Configuration</h3>
+            <label>API URL: <input type="text" id="apiUrl" value="http://127.0.0.1:8000/data" style="width: 300px;"></label><br><br>
+            <label>Origin: <input type="text" id="origin" value="http://localhost:3000" style="width: 300px;"></label>
+        </div>
+
+        <div class="section">
+            <h3>CORS Tests</h3>
+            <button onclick="testSimpleRequest()">Test Simple GET Request</button>
+            <button onclick="testPreflightRequest()">Test Preflight Request (POST)</button>
+            <button onclick="testWithCredentials()">Test with Credentials</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(title, content, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const section = document.createElement('div');
+            section.className = `section ${type}`;
+            section.innerHTML = `<h4>${title}</h4>${content}`;
+            resultsDiv.appendChild(section);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testSimpleRequest() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const origin = document.getElementById('origin').value;
+            
+            // Show loading state
+            addResult('🔄 Testing Simple GET Request...', '<p>Please wait...</p>', 'info');
+            
+            try {
+                console.log('Testing simple GET request to:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Origin': origin
+                    }
+                });
+
+                console.log('Response received:', response);
+
+                // Extract all response headers for debugging
+                const allHeaders = {};
+                for (let [key, value] of response.headers.entries()) {
+                    allHeaders[key] = value;
+                }
+                console.log('All response headers:', allHeaders);
+
+                // Check if request was successful
+                if (response.ok) {
+                    const corsHeaders = extractCorsHeaders(response);
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (jsonError) {
+                        data = { error: 'Could not parse JSON response' };
+                    }
+                    
+                    addResult(
+                        '✅ Simple GET Request - SUCCESS',
+                        `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>All Response Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>
+                        <p><strong>CORS-Specific Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(corsHeaders, null, 2)}</pre>
+                        <p><strong>Data Preview:</strong> ${data.status || 'Success'} ${data.data ? `(${data.data.length} records)` : ''}</p>
+                        `,
+                        'success'
+                    );
+                } else {
+                    addResult(
+                        '❌ Simple GET Request - FAILED',
+                        `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                         <p><strong>Response Headers:</strong></p>
+                         <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>`,
+                        'error'
+                    );
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                addResult(
+                    '❌ Simple GET Request - ERROR',
+                    `<p><strong>Error:</strong> ${error.message}</p>
+                     <p><strong>Error Type:</strong> ${error.name}</p>
+                     <p>This typically indicates a CORS policy violation or network issue.</p>`,
+                    'error'
+                );
+            }
+        }
+
+        async function testPreflightRequest() {
+            const apiUrl = document.getElementById('apiUrl').value.replace('/data', '/data/filter');
+            const origin = document.getElementById('origin').value;
+            
+            // Show loading state
+            addResult('🔄 Testing Preflight Request (POST)...', '<p>Please wait...</p>', 'info');
+            
+            try {
+                console.log('Testing preflight request to:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': origin
+                    },
+                    body: JSON.stringify({
+                        region: "All",
+                        category: "All",
+                        limit: 10
+                    })
+                });
+
+                console.log('POST Response received:', response);
+
+                // Extract all response headers
+                const allHeaders = {};
+                for (let [key, value] of response.headers.entries()) {
+                    allHeaders[key] = value;
+                }
+
+                if (response.ok) {
+                    const corsHeaders = extractCorsHeaders(response);
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (jsonError) {
+                        data = { error: 'Could not parse JSON response' };
+                    }
+                    
+                    addResult(
+                        '✅ Preflight Request (POST) - SUCCESS',
+                        `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>All Response Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>
+                        <p><strong>CORS-Specific Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(corsHeaders, null, 2)}</pre>
+                        <p><strong>Data Preview:</strong> ${data.status || 'Success'}</p>
+                        <p><em>💡 Tip: Check Network tab for OPTIONS preflight request (should appear before this POST)</em></p>
+                        `,
+                        'success'
+                    );
+                } else {
+                    addResult(
+                        '❌ Preflight Request - FAILED',
+                        `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                         <p><strong>Response Headers:</strong></p>
+                         <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>`,
+                        'error'
+                    );
+                }
+
+            } catch (error) {
+                console.error('POST Fetch error:', error);
+                addResult(
+                    '❌ Preflight Request - ERROR',
+                    `<p><strong>Error:</strong> ${error.message}</p>
+                     <p><strong>Error Type:</strong> ${error.name}</p>
+                     <p>This typically indicates a CORS preflight failure or network issue.</p>`,
+                    'error'
+                );
+            }
+        }
+
+        async function testWithCredentials() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const origin = document.getElementById('origin').value;
+            
+            // Show loading state
+            addResult('🔄 Testing Request with Credentials...', '<p>Please wait...</p>', 'info');
+            
+            try {
+                console.log('Testing request with credentials to:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Origin': origin
+                    }
+                });
+
+                console.log('Credentials Response received:', response);
+
+                // Extract all response headers
+                const allHeaders = {};
+                for (let [key, value] of response.headers.entries()) {
+                    allHeaders[key] = value;
+                }
+
+                if (response.ok) {
+                    const corsHeaders = extractCorsHeaders(response);
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (jsonError) {
+                        data = { error: 'Could not parse JSON response' };
+                    }
+                    
+                    addResult(
+                        '✅ Request with Credentials - SUCCESS',
+                        `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>All Response Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>
+                        <p><strong>CORS-Specific Headers:</strong></p>
+                        <pre class="header-info">${JSON.stringify(corsHeaders, null, 2)}</pre>
+                        <p><strong>Allow-Credentials:</strong> ${corsHeaders['access-control-allow-credentials'] || 'Not set'}</p>
+                        <p><strong>Data Preview:</strong> ${data.status || 'Success'}</p>
+                        `,
+                        'success'
+                    );
+                } else {
+                    addResult(
+                        '❌ Request with Credentials - FAILED',
+                        `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                         <p><strong>Response Headers:</strong></p>
+                         <pre class="header-info">${JSON.stringify(allHeaders, null, 2)}</pre>`,
+                        'error'
+                    );
+                }
+
+            } catch (error) {
+                console.error('Credentials Fetch error:', error);
+                addResult(
+                    '❌ Request with Credentials - ERROR',
+                    `<p><strong>Error:</strong> ${error.message}</p>
+                     <p><strong>Error Type:</strong> ${error.name}</p>
+                     <p>This might indicate credentials are not allowed or CORS misconfiguration.</p>`,
+                    'error'
+                );
+            }
+        }
+
+        function extractCorsHeaders(response) {
+            const corsHeaders = {};
+            const corsHeaderNames = [
+                'access-control-allow-origin',
+                'access-control-allow-methods',
+                'access-control-allow-headers',
+                'access-control-allow-credentials',
+                'access-control-expose-headers',
+                'access-control-max-age'
+            ];
+
+            corsHeaderNames.forEach(headerName => {
+                const value = response.headers.get(headerName);
+                if (value) {
+                    corsHeaders[headerName] = value;
+                }
+            });
+
+            return corsHeaders;
+        }
+
+        // Auto-run simple test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult(
+                    'ℹ️ CORS Debug Tool Loaded',
+                    `
+                    <p>This tool will help you verify CORS configuration.</p>
+                    <p><strong>Current setup:</strong></p>
+                    <ul>
+                        <li>API URL: ${document.getElementById('apiUrl').value}</li>
+                        <li>Origin: ${document.getElementById('origin').value}</li>
+                    </ul>
+                    <p>Click the test buttons above to verify CORS is working correctly.</p>
+                    `,
+                    'info'
+                );
+            }, 100);
+        });
+    </script>
+</body>
+</html>
