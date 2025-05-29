@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+  color: #e0e0e0;
+  overflow-x: hidden;
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 30, 50, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 120, 0.3);
+  border-radius: 0.2rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 120, 0.5);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s infinite;
+}
+
+/* Custom range slider styling */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(100, 100, 120, 0.3);
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: linear-gradient(45deg, #00d4ff, #0099cc);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: linear-gradient(45deg, #00d4ff, #0099cc);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Updated grid layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-areas: 
+    "header header header header header"
+    "sidebar main-forecast main-forecast main-forecast model-performance"
+    "sidebar main-forecast main-forecast main-forecast model-comparison"
+    "sidebar forecast-results ai-insights  ai-insights system-alerts";
+  grid-template-columns: 2fr 2.5fr 1.5fr 1fr 2fr; 
+  grid-template-rows: auto minmax(15rem, auto) minmax(15rem, auto) minmax(15rem, auto);
+  min-height: 100vh;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Grid area assignments */
+.grid-area-header { 
+  grid-area: header;
+  position: relative;
+  z-index: 10;
+}
+.grid-area-sidebar { 
+  grid-area: sidebar;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-main-forecast { 
+  grid-area: main-forecast;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-main-forecast > * {
+  flex: 1;
+}
+.grid-area-model-performance { 
+  grid-area: model-performance;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-model-comparison { 
+  grid-area: model-comparison;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-forecast-results { 
+  grid-area: forecast-results;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-ai-insights { 
+  grid-area: ai-insights;
+  display: flex;
+  flex-direction: column;
+}
+.grid-area-system-alerts { 
+  grid-area: system-alerts;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure panels fill their containers */
+.grid-area-forecast-results > *,
+.grid-area-ai-insights > *,
+.grid-area-system-alerts > *,
+.grid-area-model-performance > *,
+.grid-area-model-comparison > * {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Tablet Layout - Stack some elements vertically */
+@media (max-width: 75rem) {
+  .dashboard-grid {
+    grid-template-areas: 
+      "header header header header"
+      "sidebar main-forecast main-forecast model-performance"
+      "sidebar main-forecast main-forecast model-comparison"
+      "forecast-results ai-insights system-alerts";
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    grid-template-rows: auto minmax(12rem, auto) minmax(12rem, auto) minmax(10rem, auto);
+  }
+}
+
+/* Mobile Layout - Single column with header */
+@media (max-width: 48rem) {
+  .dashboard-grid {
+    grid-template-areas: 
+      "header"
+      "sidebar"
+      "main-forecast"
+      "model-performance"
+      "model-comparison"
+      "forecast-results"
+      "ai-insights"
+      "system-alerts";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto repeat(7, minmax(10rem, auto));
+    gap: 0.75rem;
+  }
+}
+
+/* Extra small mobile - Compact spacing */
+@media (max-width: 30rem) {
+  .dashboard-grid {
+    gap: 0.5rem;
+    padding: 0.25rem;
+    grid-template-rows: auto repeat(7, minmax(8rem, auto));
+  }
+}
