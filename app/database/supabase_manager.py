@@ -86,6 +86,29 @@ class SupabaseManager:
             logger.error(f"Error checking data existence: {str(e)}")
             return False
     
+    def get_all_data(self) -> List[Dict]:
+        """Get all data from the table"""
+        try:
+            # Use pagination to get all records
+            all_data = []
+            offset = 0
+            limit = 1000  # Supabase default limit per request
+            
+            while True:
+                result = self.client.table(self.table_name).select("*").range(offset, offset + limit - 1).execute()
+                if not result.data:
+                    break
+                all_data.extend(result.data)
+                offset += limit
+                if len(result.data) < limit:
+                    break
+            
+            logger.info(f"Retrieved {len(all_data)} records from Supabase")
+            return all_data
+        except Exception as e:
+            logger.error(f"Error getting all data: {str(e)}")
+            return []
+    
     def get_all_transactions(self) -> pd.DataFrame:
         """Get all transactions as DataFrame"""
         try:
@@ -93,6 +116,7 @@ class SupabaseManager:
             all_data = []
             offset = 0
             limit = 1000  # Supabase default limit per request
+            
             while True:
                 result = self.client.table(self.table_name).select("*").range(offset, offset + limit - 1).execute()
                 if not result.data:
@@ -127,12 +151,24 @@ class SupabaseManager:
     def filter_by_region(self, region: str) -> pd.DataFrame:
         """Filter transactions by region"""
         try:
-            result = self.client.table(self.table_name).select("*").eq('region', region).execute()
+            # Use pagination to get all records
+            all_data = []
+            offset = 0
+            limit = 1000  # Supabase default limit per request
             
-            if not result.data:
+            while True:
+                result = self.client.table(self.table_name).select("*").eq('region', region).range(offset, offset + limit - 1).execute()
+                if not result.data:
+                    break
+                all_data.extend(result.data)
+                offset += limit
+                if len(result.data) < limit:
+                    break
+            
+            if not all_data:
                 return pd.DataFrame()
             
-            df = pd.DataFrame(result.data)
+            df = pd.DataFrame(all_data)
             
             # Convert date strings back to datetime
             if 'order_date' in df.columns:
@@ -149,8 +185,22 @@ class SupabaseManager:
     def get_regions(self) -> List[str]:
         """Get unique regions"""
         try:
-            result = self.client.table(self.table_name).select("region").execute()
-            regions = list(set([item['region'] for item in result.data]))
+            # Use pagination to get all records
+            all_data = []
+            offset = 0
+            limit = 1000  # Supabase default limit per request
+            
+            while True:
+                result = self.client.table(self.table_name).select("region").range(offset, offset + limit - 1).execute()
+                if not result.data:
+                    break
+                all_data.extend(result.data)
+                offset += limit
+                if len(result.data) < limit:
+                    break
+            
+            regions = list(set([item['region'] for item in all_data]))
+            logger.info(f"Retrieved {len(regions)} unique regions from Supabase")
             return sorted(regions)
         except Exception as e:
             logger.error(f"Error getting regions: {str(e)}")
@@ -159,8 +209,22 @@ class SupabaseManager:
     def get_segments(self) -> List[str]:
         """Get unique segments"""
         try:
-            result = self.client.table(self.table_name).select("segment").execute()
-            segments = list(set([item['segment'] for item in result.data]))
+            # Use pagination to get all records
+            all_data = []
+            offset = 0
+            limit = 1000  # Supabase default limit per request
+            
+            while True:
+                result = self.client.table(self.table_name).select("segment").range(offset, offset + limit - 1).execute()
+                if not result.data:
+                    break
+                all_data.extend(result.data)
+                offset += limit
+                if len(result.data) < limit:
+                    break
+            
+            segments = list(set([item['segment'] for item in all_data]))
+            logger.info(f"Retrieved {len(segments)} unique segments from Supabase")
             return sorted(segments)
         except Exception as e:
             logger.error(f"Error getting segments: {str(e)}")
@@ -169,8 +233,22 @@ class SupabaseManager:
     def get_categories(self) -> List[str]:
         """Get unique categories"""
         try:
-            result = self.client.table(self.table_name).select("category").execute()
-            categories = list(set([item['category'] for item in result.data]))
+            # Use pagination to get all records
+            all_data = []
+            offset = 0
+            limit = 1000  # Supabase default limit per request
+            
+            while True:
+                result = self.client.table(self.table_name).select("category").range(offset, offset + limit - 1).execute()
+                if not result.data:
+                    break
+                all_data.extend(result.data)
+                offset += limit
+                if len(result.data) < limit:
+                    break
+            
+            categories = list(set([item['category'] for item in all_data]))
+            logger.info(f"Retrieved {len(categories)} unique categories from Supabase")
             return sorted(categories)
         except Exception as e:
             logger.error(f"Error getting categories: {str(e)}")

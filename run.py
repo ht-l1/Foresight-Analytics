@@ -321,6 +321,8 @@ def main():
     
     # Load data
     df, regions, categories = load_and_prepare_data()
+    # st.write("DEBUG: Regions from DataLoader:", regions)
+    # st.write("DEBUG: Categories from DataLoader:", categories)
     
     if df.empty:
         st.error("No data available. Please check the data source.")
