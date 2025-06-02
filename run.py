@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
+from app.llm.insights import df_to_insight_text, generate_summary_insight
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -177,11 +178,12 @@ def create_forecast_visualizations(df, months_to_forecast):
     
     # Create main forecast plot
     fig = make_subplots(
-        rows=2, cols=2,
-        subplot_titles=('Sales Forecast Comparison', 'Model Accuracy Comparison', 
-                       'Sales by Category', 'Monthly Sales Trend'),
-        specs=[[{"colspan": 2}, None],
-               [{"type": "bar"}, {"type": "pie"}]],
+        rows=2, cols=3,
+        row_heights=[0.6, 0.4],  # More space for row 1 (ML trend), less for row 2
+        subplot_titles=('Sales Forecast ML Models', 'Model Accuracy',
+                       'Sales by Category', "Sales by Region"),
+        specs=[[{"colspan": 3}, None, None],
+               [{"type": "bar"}, {"type": "pie"}, {"type": "pie"}]],
         vertical_spacing=0.12
     )
     
@@ -196,7 +198,8 @@ def create_forecast_visualizations(df, months_to_forecast):
             mode='lines+markers',
             name='Historical',
             line=dict(color='#ffffff', width=3),
-            marker=dict(size=6)
+            marker=dict(size=6),
+            showlegend=False
         ),
         row=1, col=1
     )
@@ -212,7 +215,9 @@ def create_forecast_visualizations(df, months_to_forecast):
                     mode='lines+markers',
                     name=f'{model_name}',
                     line=dict(color=colors[i % len(colors)], width=2, dash='dash'),
-                    marker=dict(size=5)
+                    marker=dict(size=5),
+                    showlegend=True,
+                    legendgroup='ML Model'
                 ),
                 row=1, col=1
             )
@@ -230,7 +235,11 @@ def create_forecast_visualizations(df, months_to_forecast):
             x=model_names,
             y=accuracies,
             marker_color=['#00d4ff', '#ff6b6b', '#4ecdc4'],
-            name='Accuracy %'
+            name='Accuracy %',
+            showlegend=False,
+            legendgroup='accuracy',
+            text=model_names,  # Add model names inside bars
+            textposition='auto'  # Position text inside bars
         ),
         row=2, col=1
     )
@@ -242,9 +251,27 @@ def create_forecast_visualizations(df, months_to_forecast):
             labels=category_sales.index,
             values=category_sales.values,
             marker_colors=['#00d4ff', '#ff6b6b', '#4ecdc4'],
-            name="Category Sales"
+            name="Category Sales",
+            showlegend=True,
+            textinfo='label+percent',  
+            legendgroup='categories'  
         ),
         row=2, col=2
+    )
+
+    # Sales by region pie chart
+    region_sales = df.groupby('region')['sales'].sum()
+    fig.add_trace(
+        go.Pie(
+            labels=region_sales.index,
+            values=region_sales.values,
+            marker_colors=['#00d4ff', '#ff6b6b', '#4ecdc4'],
+            name="Region Sales",
+            showlegend=True,
+            textinfo='label+percent',  
+            legendgroup='region'  
+        ),
+        row=2, col=3
     )
     
     # Update layout for dark theme
@@ -255,38 +282,32 @@ def create_forecast_visualizations(df, months_to_forecast):
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='white'),
         legend=dict(
-            bgcolor='rgba(0,0,0,0.5)',
-            bordercolor='white',
-            borderwidth=1
+        groupclick="toggleitem",  # Allow clicking group titles to toggle
+        tracegroupgap=50,         # Add spacing between legend-groups
+        title_font_size=14,       # style group titles
+        title_font_color='white'
         )
     )
     
     # Update all axes for dark theme
     fig.update_xaxes(gridcolor='#444', color='white')
     fig.update_yaxes(gridcolor='#444', color='white')
+    fig.update_xaxes(showticklabels=False, row=2, col=1)
     
     return fig, forecast_results
 
 def display_model_performance(forecast_results):
     """Display detailed model performance metrics"""
-    st.markdown("<h3 style='color: #00d4ff;'>Model Performance Details</h3>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #00d4ff;'>Model Performance</h4>", unsafe_allow_html=True)
     
     for model_name, result in forecast_results.items():
         metrics = result.get('metrics', {})
         if metrics:
             accuracy = metrics.get('accuracy', 0)
             mape = metrics.get('mape', 0)
-            
-            # Color coding based on accuracy
-            if accuracy >= 80:
-                color = "#4ecdc4"  # Green
-            elif accuracy >= 60:
-                color = "#ff6b6b"  # Orange
-            else:
-                color = "#ff4444"  # Red
-            
+
             st.markdown(f"""
-            <div class="model-accuracy" style="border-left: 4px solid {color};">
+            <div class="model-accuracy" style="border-radius: 4px; border-left: 4px solid #00d4ff;">
                 <strong style="color: white; font-size: 1.1em;">{model_name}</strong><br>
                 <span style="color: #00d4ff;">Accuracy:</span> <strong style="color: white;">{accuracy:.1f}%</strong> | 
                 <span style="color: #00d4ff;">MAPE:</span> <strong style="color: white;">{mape:.3f}</strong>
@@ -378,15 +399,30 @@ def main():
             st.error(f"Error generating forecasts: {str(e)}")
             return
 
-    # Two columns for additional insights
-    col1, col2 = st.columns([2, 1])
+    # Three columns for additional insights
+    col1, col2, col3 = st.columns([1.5, 1.5, 2])
     
     with col1:
         # Model performance details
         display_model_performance(forecast_results)
         
+    with col2:
+        # Top performing segments
+        st.markdown("<h4 style='color: #00d4ff;'>Top Segments</h4>", unsafe_allow_html=True)
+        segment_performance = filtered_df.groupby('segment')['sales'].sum().sort_values(ascending=False)
+        
+        for segment, sales in segment_performance.items():
+            percentage = (sales / segment_performance.sum()) * 100
+            st.markdown(f"""
+            <div style="margin: 0.3rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 4px; border-left: 4px solid #00d4ff">
+                <strong style="color: white;">{segment}</strong><br>
+                <span style="color: #00d4ff;">${sales:,.0f}</span> ({percentage:.1f}%)
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col3:
         # Recent trends table
-        st.markdown("<h3 style='color: #00d4ff;'>Recent Sales Trends</h3>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #00d4ff;'>Recent Sales Trends</h4>", unsafe_allow_html=True)
         recent_data = filtered_df.groupby(filtered_df['order_date'].dt.to_period('M'))['sales'].agg(['sum', 'count', 'mean']).tail(6)
         recent_data.columns = ['Total Sales', 'Orders', 'Avg Order Value']
         recent_data.index = recent_data.index.astype(str)
@@ -396,20 +432,49 @@ def main():
             'Avg Order Value': '${:.0f}'
         }), use_container_width=True)
     
-    with col2:
-        # Top performing segments
-        st.markdown("<h3 style='color: #00d4ff;'>Top Segments</h3>", unsafe_allow_html=True)
-        segment_performance = filtered_df.groupby('segment')['sales'].sum().sort_values(ascending=False)
-        
-        for segment, sales in segment_performance.items():
-            percentage = (sales / segment_performance.sum()) * 100
-            st.markdown(f"""
-            <div style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 4px;">
-                <strong style="color: white;">{segment}</strong><br>
-                <span style="color: #00d4ff;">${sales:,.0f}</span> ({percentage:.1f}%)
+
+    # LLM-powered Automated Insights Section
+    # st.markdown("---")
+    st.markdown("<h4 style='color: #00d4ff;'>LLM-Powered Business Summary</h4>", unsafe_allow_html=True)
+
+    # Generate insights using LLM
+    with st.spinner("Generating AI insights..."):
+        try:
+            # Convert filtered data to text for LLM analysis
+            llm_input_text = df_to_insight_text(
+                filtered_df, 
+                region_filter=selected_region, 
+                category_filter=selected_category
+            )
+            
+            # Generate summary insight only
+            summary_insight = generate_summary_insight(llm_input_text)
+            
+            # Display single comprehensive summary
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%); 
+                        padding: 2rem; border-radius: 12px; border-left: 4px solid #00d4ff; 
+                        margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <p style="color: white; font-size: 1.2rem; line-height: 1.6; margin: 0;">
+                    {summary_insight}
+                </p>
             </div>
-            """, unsafe_allow_html=True)
-    
+            """.format(summary_insight=summary_insight), unsafe_allow_html=True)
+            
+        except Exception as e:
+            # Fallback for complete failure
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%); 
+                        padding: 2rem; border-radius: 12px; border-left: 4px solid #00d4ff; 
+                        margin: 1rem 0;">
+                <h4 style="color: #00d4ff; margin: 0 0 1rem 0;">📊 Business Performance Summary</h4>
+                <p style="color: white; font-size: 1.2rem; line-height: 1.6; margin: 0;">
+                    Business generated ${filtered_df['sales'].sum():,.0f} in total sales with {len(filtered_df):,} orders 
+                    averaging ${filtered_df['sales'].mean():.0f} per transaction across the selected analysis period.
+                </p>
+            </div>
+            """.format(filtered_df=filtered_df), unsafe_allow_html=True)
+
     # Footer
     st.markdown("---")
     st.markdown(
