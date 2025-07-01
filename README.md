@@ -19,18 +19,22 @@
         - Without Caching: Department change → 2.1s load time
         - With Caching: Department change → 0.3s load time
 
-## Kaggle API Setup
-1. Create Kaggle account and generate API token
-2. Create `.env` file in root directory:
-    KAGGLE_USERNAME=your_username
-    KAGGLE_KEY=your_api_key
-
 ## Running Locally
 For winsows
 - `git clone https://github.com/ht-l1/Foresight-Analytics.git`
-- `.\venv\Scripts\activate`
+- `python -m venv venv`
+- (powershell)`venv\Scripts\activate`
+- (bash)`. venv/Scripts/activate` or `source venv/Scripts/activate`
+
+<!-- install & save the locked version -->
 - `pip install -r requirements.txt`
-- `streamlit run run.py`
+- `pip list --not-required --format=freeze > requirements-lock.txt`
+
+## Testing
+- front end
+    - `npm run dev`
+- back end
+    -  `uvicorn app.main:app --reload`
 
 ## Tech Stacks Used
 <!-- https://github.com/inttter/md-badges -->
