@@ -11,7 +11,7 @@ database_url = settings.neon_database_url or settings.database_url
 engine = create_engine(database_url)
 SessionLocal = sessionmaker(automcommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
