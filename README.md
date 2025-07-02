@@ -36,6 +36,10 @@ For winsows
 - back end
     -  `uvicorn app.main:app --reload`
 
+## Migration
+- `alembic revision --autogenerate -m "Description of changes"`
+- `alembic upgrade head`
+
 ## Tech Stacks Used
 <!-- https://github.com/inttter/md-badges -->
 Core: 
