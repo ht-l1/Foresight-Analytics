@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..core.database import Base
@@ -21,55 +21,56 @@ class Company(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    financial_statements = relationship("FinancialStatement", back_populates="company")
+    income_statements = relationship("IncomeStatement", back_populates="company")
+    balance_sheet_statements = relationship("BalanceSheetStatement", back_populates="company")
+    cash_flow_statements = relationship("CashFlowStatement", back_populates="company")
     revenue_segments = relationship("RevenueSegment", back_populates="company")
     predictions = relationship("MLPrediction", back_populates="company")
 
-class FinancialStatement(Base):  
-# Financial Statement API
-    __tablename__ = "financial_statements"
-    
+class IncomeStatement(Base):
+    __tablename__ = 'income_statements'
     id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
     symbol = Column(String(10), index=True, nullable=False)
-    
-    # Time period info
-    date = Column(DateTime, nullable=False, index=True)
-    period = Column(String(10), nullable=False)  # Q1, Q2, Q3, Q4, FY
-    calendar_year = Column(Integer, nullable=False, index=True)
-    
-    # Revenue metrics
-    # Income Statement API & Financial Ratios API
+    date = Column(Date, nullable=False, index=True)
+    period = Column(String(10), nullable=False)
+    calendar_year = Column(String(4), nullable=False)
     revenue = Column(Float)
     cost_of_revenue = Column(Float)
     gross_profit = Column(Float)
-    gross_profit_margin = Column(Float)
-    
-    # Operating metrics
-    # Income Statement API
-    operating_expenses = Column(Float)
-    operating_income = Column(Float)
-    operating_margin = Column(Float)
-    
-    # Profitability metrics
-    # Income Statement API
     net_income = Column(Float)
-    net_margin = Column(Float)
-    eps = Column(Float)  # Earnings per share
+    eps = Column(Float)
+    epsdiluted = Column(Float)
     
-    # Growth metrics (calculated fields)
-    # or Income Statement Growth API
-    revenue_growth_yoy = Column(Float)
-    revenue_growth_qoq = Column(Float)
+    company = relationship("Company", back_populates="income_statements")
+
+class BalanceSheetStatement(Base):
+    __tablename__ = 'balance_sheet_statements'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    date = Column(Date, nullable=False, index=True)
+    period = Column(String(10), nullable=False)
+    calendar_year = Column(String(4), nullable=False)
+    total_assets = Column(Float)
+    total_liabilities = Column(Float)
+    total_stockholders_equity = Column(Float)
     
-    # Meta fields
-    filing_date = Column(DateTime)
-    accepted_date = Column(DateTime)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    company = relationship("Company", back_populates="balance_sheet_statements")
+
+class CashFlowStatement(Base):
+    __tablename__ = 'cash_flow_statements'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    date = Column(Date, nullable=False, index=True)
+    period = Column(String(10), nullable=False)
+    calendar_year = Column(String(4), nullable=False)
+    net_cash_provided_by_operating_activities = Column(Float)
+    net_cash_used_for_investing_activities = Column(Float)
+    net_cash_used_by_financing_activities = Column(Float)
     
-    # Relationships
-    company = relationship("Company", back_populates="financial_statements")
+    company = relationship("Company", back_populates="cash_flow_statements")
 
 class RevenueSegment(Base):
 # Revenue Product Segmentation API
@@ -214,7 +215,9 @@ class ModelPerformance(Base):
 from sqlalchemy import Index
 
 # Composite indexes for common queries
-Index('idx_financial_statements_symbol_date', FinancialStatement.symbol, FinancialStatement.date)
+Index('idx_income_statements_symbol_date', IncomeStatement.symbol, IncomeStatement.date)
+Index('idx_balance_sheet_statements_symbol_date', BalanceSheetStatement.symbol, BalanceSheetStatement.date)
+Index('idx_cash_flow_statements_symbol_date', CashFlowStatement.symbol, CashFlowStatement.date)
 Index('idx_revenue_segments_symbol_date', RevenueSegment.symbol, RevenueSegment.date)
 Index('idx_predictions_symbol_date', MLPrediction.symbol, MLPrediction.prediction_date)
 Index('idx_news_published_sentiment', NewsArticle.published_date, NewsArticle.sentiment_score)
