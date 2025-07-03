@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 from dotenv import load_dotenv
 from pathlib import Path
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # FMP API Configuration
     fmp_api_key: str = ""
-    fmp_base_url: str = "https://financialmodelingprep.com/api/v3"
+    fmp_base_url: str = "https://financialmodelingprep.com/stable"
     fmp_rate_limit_delay: int = 1  # seconds between requests for free tier
     
     # Data fetch limits (free tier constraints)
@@ -38,7 +38,6 @@ class Settings(BaseSettings):
     fmp_max_periods: int = 20   # quarters per company
     fmp_max_articles: int = 20  # articles per request
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()

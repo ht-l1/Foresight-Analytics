@@ -1,38 +1,47 @@
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Optional, List
 from datetime import datetime, date
-from decimal import Decimal
 
 class CompanyProfile(BaseModel):
-    symbol: str
-    companyName: str
-    currency: str
-    exchange: str
-    industry: str
-    sector: str
-    country: str
-    marketCap: Optional[int] = None
-    beta: Optional[float] = None
-    volAvg: Optional[int] = None
-    mktCap: Optional[int] = None
-    lastDiv: Optional[float] = None
-    range: Optional[str] = None
-    changes: Optional[float] = None
-    price: Optional[float] = None
-    dcfDiff: Optional[float] = None
-    dcf: Optional[float] = None
-    image: Optional[str] = None
-    ipoDate: Optional[date] = None
-    defaultImage: Optional[bool] = None
-    isEtf: Optional[bool] = None
-    isActivelyTrading: Optional[bool] = None
-    isAdr: Optional[bool] = None
-    isFund: Optional[bool] = None
-    description: Optional[str] = None
-    ceo: Optional[str] = None
-    website: Optional[str] = None
-    
-    @validator('ipoDate', pre=True)
+    symbol: str = Field(..., description="The stock symbol of the company.")
+    price: Optional[float] = Field(None, description="Current stock price.")
+    beta: Optional[float] = Field(None, description="Beta of the stock.")
+    volAvg: Optional[int] = Field(None, description="Average trading volume.")
+    mktCap: Optional[int] = Field(None, description="Market capitalization.")
+    lastDiv: Optional[float] = Field(None, description="Last dividend paid.")
+    range: Optional[str] = Field(None, description="52-week trading range.")
+    changes: Optional[float] = Field(None, description="Recent price change.")
+    companyName: str = Field(..., description="The name of the company.")
+    currency: Optional[str] = Field(None, description="The currency the financials are reported in.")
+    cik: Optional[str] = Field(None, description="CIK number.")
+    isin: Optional[str] = Field(None, description="ISIN number.")
+    cusip: Optional[str] = Field(None, description="CUSIP number.")
+    exchange: Optional[str] = Field(None, description="The stock exchange where the company is listed.")
+    exchangeShortName: Optional[str] = Field(None, description="Abbreviated name of the stock exchange.")
+    industry: Optional[str] = Field(None, description="The industry the company belongs to.")
+    website: Optional[str] = Field(None, description="Company's official website URL.")
+    description: Optional[str] = Field(None, description="A description of the company's business.")
+    ceo: Optional[str] = Field(None, description="Name of the CEO.")
+    sector: Optional[str] = Field(None, description="The sector the company belongs to.")
+    country: Optional[str] = Field(None, description="The country where the company is headquartered.")
+    fullTimeEmployees: Optional[str] = Field(None, description="Number of full-time employees.")
+    phone: Optional[str] = Field(None, description="Company's phone number.")
+    address: Optional[str] = Field(None, description="Company's physical address.")
+    city: Optional[str] = Field(None, description="City of the company's headquarters.")
+    state: Optional[str] = Field(None, description="State of the company's headquarters.")
+    zip: Optional[str] = Field(None, description="Zip code of the company's headquarters.")
+    dcfDiff: Optional[float] = Field(None, alias="dcfDiff", description="DCF difference.")
+    dcf: Optional[float] = Field(None, description="Discounted Cash Flow value.")
+    image: Optional[str] = Field(None, description="URL of the company's logo.")
+    ipoDate: Optional[date] = Field(None, description="Initial Public Offering date.")
+    defaultImage: bool = Field(False, description="Indicates if the image is a default one.")
+    isEtf: bool = Field(False, description="Indicates if the security is an ETF.")
+    isActivelyTrading: bool = Field(False, description="Indicates if the company is actively trading.")
+    isAdr: bool = Field(False, description="Indicates if the security is an ADR.")
+    isFund: bool = Field(False, description="Indicates if the security is a fund.")
+
+    @field_validator('ipoDate', mode='before')
+    @classmethod
     def parse_ipo_date(cls, v):
         if isinstance(v, str) and v:
             try:
@@ -41,57 +50,53 @@ class CompanyProfile(BaseModel):
                 return None
         return v
 
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
 class IncomeStatement(BaseModel):
-    date: date
-    symbol: str
-    reportedCurrency: str
-    cik: Optional[str] = None
-    fillingDate: Optional[date] = None
-    acceptedDate: Optional[datetime] = None
-    calendarYear: str
-    period: str
-    
-    # Revenue & Income
-    revenue: Optional[int] = None
-    costOfRevenue: Optional[int] = None
-    grossProfit: Optional[int] = None
-    grossProfitRatio: Optional[float] = None
-    
-    # Operating
-    researchAndDevelopmentExpenses: Optional[int] = None
-    generalAndAdministrativeExpenses: Optional[int] = None
-    sellingAndMarketingExpenses: Optional[int] = None
-    sellingGeneralAndAdministrativeExpenses: Optional[int] = None
-    otherExpenses: Optional[int] = None
-    operatingExpenses: Optional[int] = None
-    costAndExpenses: Optional[int] = None
-    interestIncome: Optional[int] = None
-    interestExpense: Optional[int] = None
-    depreciationAndAmortization: Optional[int] = None
-    ebitda: Optional[int] = None
-    ebitdaratio: Optional[float] = None
-    operatingIncome: Optional[int] = None
-    operatingIncomeRatio: Optional[float] = None
-    
-    # Net Income
-    totalOtherIncomeExpensesNet: Optional[int] = None
-    incomeBeforeTax: Optional[int] = None
-    incomeBeforeTaxRatio: Optional[float] = None
-    incomeTaxExpense: Optional[int] = None
-    netIncome: Optional[int] = None
-    netIncomeRatio: Optional[float] = None
-    
-    # Per Share
-    eps: Optional[float] = None
-    epsdiluted: Optional[float] = None
-    weightedAverageShsOut: Optional[int] = None
-    weightedAverageShsOutDil: Optional[int] = None
-    
-    # URLs
-    link: Optional[str] = None
-    finalLink: Optional[str] = None
-    
-    @validator('date', 'fillingDate', pre=True)
+    report_date: date = Field(..., alias='date', description="The date of the financial statement.")
+    symbol: str = Field(..., description="The stock symbol.")
+    reportedCurrency: str = Field(..., description="The currency the statement is reported in.")
+    cik: str = Field(..., description="CIK number.")
+    fillingDate: date = Field(..., description="The date the statement was filed.")
+    acceptedDate: datetime = Field(..., description="The date the filing was accepted.")
+    calendarYear: str = Field(..., description="The calendar year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'Q1', 'FY').")
+    revenue: float = Field(..., description="Total revenue.")
+    costOfRevenue: float = Field(..., description="Cost of revenue.")
+    grossProfit: float = Field(..., description="Gross profit.")
+    grossProfitRatio: float = Field(..., description="Gross profit ratio.")
+    researchAndDevelopmentExpenses: float = Field(..., description="R&D expenses.")
+    generalAndAdministrativeExpenses: float = Field(..., description="G&A expenses.")
+    sellingAndMarketingExpenses: float = Field(..., description="S&M expenses.")
+    sellingGeneralAndAdministrativeExpenses: float = Field(..., description="SG&A expenses.")
+    otherExpenses: float = Field(..., description="Other operating expenses.")
+    operatingExpenses: float = Field(..., description="Total operating expenses.")
+    costAndExpenses: float = Field(..., description="Total costs and expenses.")
+    interestIncome: float = Field(..., description="Interest income.")
+    interestExpense: float = Field(..., description="Interest expense.")
+    depreciationAndAmortization: float = Field(..., description="Depreciation and amortization.")
+    ebitda: float = Field(..., description="Earnings Before Interest, Taxes, Depreciation, and Amortization.")
+    ebitdaratio: float = Field(..., description="EBITDA ratio.")
+    operatingIncome: float = Field(..., description="Operating income.")
+    operatingIncomeRatio: float = Field(..., description="Operating income ratio.")
+    totalOtherIncomeExpensesNet: float = Field(..., description="Net total other income/expenses.")
+    incomeBeforeTax: float = Field(..., description="Income before tax.")
+    incomeBeforeTaxRatio: float = Field(..., description="Income before tax ratio.")
+    incomeTaxExpense: float = Field(..., description="Income tax expense.")
+    netIncome: float = Field(..., description="Net income.")
+    netIncomeRatio: float = Field(..., description="Net income ratio.")
+    eps: float = Field(..., description="Earnings per share.")
+    epsdiluted: float = Field(..., description="Diluted earnings per share.")
+    weightedAverageShsOut: int = Field(..., description="Weighted average shares outstanding.")
+    weightedAverageShsOutDil: int = Field(..., description="Diluted weighted average shares outstanding.")
+    link: Optional[str] = Field(None, description="Link to the original filing.")
+    finalLink: Optional[str] = Field(None, description="Final link to the filing.")
+
+    @field_validator('report_date', 'fillingDate', mode='before')
+    @classmethod
     def parse_date(cls, v):
         if isinstance(v, str) and v:
             try:
@@ -100,7 +105,8 @@ class IncomeStatement(BaseModel):
                 return None
         return v
     
-    @validator('acceptedDate', pre=True)
+    @field_validator('acceptedDate', mode='before')
+    @classmethod
     def parse_accepted_date(cls, v):
         if isinstance(v, str) and v:
             try:
@@ -109,120 +115,123 @@ class IncomeStatement(BaseModel):
                 return None
         return v
 
-class BalanceSheet(BaseModel):
-    date: date
-    symbol: str
-    reportedCurrency: str
-    cik: Optional[str] = None
-    fillingDate: Optional[date] = None
-    acceptedDate: Optional[datetime] = None
-    calendarYear: str
-    period: str
-    
-    # Assets
-    cashAndCashEquivalents: Optional[int] = None
-    shortTermInvestments: Optional[int] = None
-    cashAndShortTermInvestments: Optional[int] = None
-    netReceivables: Optional[int] = None
-    inventory: Optional[int] = None
-    otherCurrentAssets: Optional[int] = None
-    totalCurrentAssets: Optional[int] = None
-    propertyPlantEquipmentNet: Optional[int] = None
-    goodwill: Optional[int] = None
-    intangibleAssets: Optional[int] = None
-    goodwillAndIntangibleAssets: Optional[int] = None
-    longTermInvestments: Optional[int] = None
-    taxAssets: Optional[int] = None
-    otherNonCurrentAssets: Optional[int] = None
-    totalNonCurrentAssets: Optional[int] = None
-    otherAssets: Optional[int] = None
-    totalAssets: Optional[int] = None
-    
-    # Liabilities
-    accountPayables: Optional[int] = None
-    shortTermDebt: Optional[int] = None
-    taxPayables: Optional[int] = None
-    deferredRevenue: Optional[int] = None
-    otherCurrentLiabilities: Optional[int] = None
-    totalCurrentLiabilities: Optional[int] = None
-    longTermDebt: Optional[int] = None
-    deferredRevenueNonCurrent: Optional[int] = None
-    deferredTaxLiabilitiesNonCurrent: Optional[int] = None
-    otherNonCurrentLiabilities: Optional[int] = None
-    totalNonCurrentLiabilities: Optional[int] = None
-    otherLiabilities: Optional[int] = None
-    capitalLeaseObligations: Optional[int] = None
-    totalLiabilities: Optional[int] = None
-    
-    # Equity
-    preferredStock: Optional[int] = None
-    commonStock: Optional[int] = None
-    retainedEarnings: Optional[int] = None
-    accumulatedOtherComprehensiveIncomeLoss: Optional[int] = None
-    othertotalStockholdersEquity: Optional[int] = None
-    totalStockholdersEquity: Optional[int] = None
-    totalEquity: Optional[int] = None
-    totalLiabilitiesAndStockholdersEquity: Optional[int] = None
-    minorityInterest: Optional[int] = None
-    totalLiabilitiesAndTotalEquity: Optional[int] = None
-    
-    # Shares
-    totalInvestments: Optional[int] = None
-    totalDebt: Optional[int] = None
-    netDebt: Optional[int] = None
-    
-    # URLs
-    link: Optional[str] = None
-    finalLink: Optional[str] = None
-    
-    @validator('date', 'fillingDate', pre=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+class BalanceSheetStatement(BaseModel):
+    report_date: date = Field(..., alias='date', description="Date of the balance sheet.")
+    symbol: str = Field(..., description="Stock symbol.")
+    cashAndCashEquivalents: float = Field(..., description="Cash and cash equivalents.")
+    shortTermInvestments: float = Field(..., description="Short-term investments.")
+    netReceivables: float = Field(..., description="Net receivables.")
+    inventory: float = Field(..., description="Inventory.")
+    totalCurrentAssets: float = Field(..., description="Total current assets.")
+    propertyPlantEquipmentNet: float = Field(..., description="Net property, plant, and equipment.")
+    goodwillAndIntangibleAssets: float = Field(..., description="Goodwill and intangible assets.")
+    totalAssets: float = Field(..., description="Total assets.")
+    accountPayables: float = Field(..., description="Accounts payable.")
+    shortTermDebt: float = Field(..., description="Short-term debt.")
+    totalCurrentLiabilities: float = Field(..., description="Total current liabilities.")
+    longTermDebt: float = Field(..., description="Long-term debt.")
+    totalLiabilities: float = Field(..., description="Total liabilities.")
+    totalStockholdersEquity: float = Field(..., description="Total stockholders' equity.")
+    totalLiabilitiesAndStockholdersEquity: float = Field(..., description="Total liabilities and stockholders' equity.")
+
+    @field_validator('report_date', mode='before')
+    @classmethod
     def parse_date(cls, v):
         if isinstance(v, str) and v:
-            try:
-                return datetime.strptime(v, '%Y-%m-%d').date()
-            except ValueError:
-                return None
+            return datetime.strptime(v, '%Y-%m-%d').date()
         return v
     
-    @validator('acceptedDate', pre=True)
-    def parse_accepted_date(cls, v):
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+class CashFlowStatement(BaseModel):
+    report_date: date = Field(..., alias='date', description="Date of the cash flow statement.")
+    symbol: str = Field(..., description="Stock symbol.")
+    netIncome: float = Field(..., description="Net income.")
+    depreciationAndAmortization: float = Field(..., description="Depreciation and amortization.")
+    deferredIncomeTax: float = Field(..., description="Deferred income tax.")
+    stockBasedCompensation: float = Field(..., description="Stock-based compensation.")
+    changeInWorkingCapital: float = Field(..., description="Change in working capital.")
+    accountsReceivables: float = Field(..., description="Accounts receivables.")
+    inventory: float = Field(..., description="Inventory.")
+    accountsPayables: float = Field(..., description="Accounts payables.")
+    otherWorkingCapital: float = Field(..., description="Other working capital.")
+    otherNonCashItems: float = Field(..., description="Other non-cash items.")
+    netCashProvidedByOperatingActivities: float = Field(..., description="Net cash from operating activities.")
+    investmentsInPropertyPlantAndEquipment: float = Field(..., description="Investments in PP&E.")
+    acquisitionsNet: float = Field(..., description="Net acquisitions.")
+    purchasesOfInvestments: float = Field(..., description="Purchases of investments.")
+    salesMaturitiesOfInvestments: float = Field(..., description="Sales and maturities of investments.")
+    otherInvestingActivites: float = Field(..., description="Other investing activities.")
+    netCashUsedForInvestingActivites: float = Field(..., description="Net cash used for investing activities.")
+    debtRepayment: float = Field(..., description="Debt repayment.")
+    commonStockIssued: float = Field(..., description="Common stock issued.")
+    commonStockRepurchased: float = Field(..., description="Common stock repurchased.")
+    dividendsPaid: float = Field(..., description="Dividends paid.")
+    otherFinancingActivites: float = Field(..., description="Other financing activities.")
+    netCashUsedProvidedByFinancingActivities: float = Field(..., description="Net cash from financing activities.")
+    effectOfForexChangesOnCash: float = Field(..., description="Effect of foreign exchange on cash.")
+    netChangeInCash: float = Field(..., description="Net change in cash.")
+    cashAtEndOfPeriod: float = Field(..., description="Cash at end of period.")
+    cashAtBeginningOfPeriod: float = Field(..., description="Cash at beginning of period.")
+    operatingCashFlow: float = Field(..., description="Operating cash flow.")
+    capitalExpenditure: float = Field(..., description="Capital expenditure.")
+    freeCashFlow: float = Field(..., description="Free cash flow.")
+
+    @field_validator('report_date', mode='before')
+    @classmethod
+    def parse_date(cls, v):
         if isinstance(v, str) and v:
-            try:
-                return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                return None
+            return datetime.strptime(v, '%Y-%m-%d').date()
         return v
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 class RevenueSegment(BaseModel):
-    date: date
-    symbol: str
-    segment: str
-    revenue: int
-    
-    @validator('date', pre=True)
+    report_date: date = Field(..., alias='date', description="Date of the segment data.")
+    symbol: str = Field(..., description="Stock symbol.")
+    segmentName: str = Field(..., description="Name of the business segment.")
+    segmentRevenue: float = Field(..., description="Revenue for the segment.")
+
+    @field_validator('report_date', mode='before')
+    @classmethod
     def parse_date(cls, v):
         if isinstance(v, str) and v:
-            try:
-                return datetime.strptime(v, '%Y-%m-%d').date()
-            except ValueError:
-                return None
+            return datetime.strptime(v, '%Y-%m-%d').date()
         return v
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 class FMPArticle(BaseModel):
-    title: str
-    date: datetime
-    content: str
-    tickers: Optional[str] = None
-    image: Optional[str] = None
-    link: Optional[str] = None
-    author: Optional[str] = None
-    site: Optional[str] = None
+    title: str = Field(..., description="Title of the article.")
+    publishedDate: datetime = Field(..., description="Publication date and time.")
+    author: str = Field(..., description="Author of the article.")
+    url: str = Field(..., description="URL to the full article.")
+    snippet: str = Field(..., description="A short snippet or summary of the article.")
+    source: str = Field(..., description="Source of the article (e.g., 'Financial Modeling Prep').")
+    tags: Optional[List[str]] = Field(None, description="List of tags associated with the article.")
     
-    @validator('date', pre=True)
-    def parse_date(cls, v):
+    @field_validator('publishedDate', mode='before')
+    @classmethod
+    def parse_published_date(cls, v):
         if isinstance(v, str) and v:
-            try:
-                return datetime.strptime(v, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                return None
+            return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
         return v
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )

@@ -14,3 +14,5 @@ passlib[bcrypt]
 python-multipart
 pydantic-settings
 aiohttp
+pytest 
+pytest-asyncio
