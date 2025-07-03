@@ -9,34 +9,34 @@ load_dotenv(dotenv_path=env_path)
 
 class Settings(BaseSettings):
     # database 
-    DATABASE_URL: str
-    NEON_DATABASE_URL: Optional[str] = None
+    database_url: str
+    neon_database_url: Optional[str] = None
 
     # redis
-    REDIS_URL: str
-    UPSTASH_REDIS_URL: Optional[str] = None
+    redis_url: str
+    upstash_redis_url: Optional[str] = None
 
     # API Keys
-    FMP_API_KEY: str
+    fmp_api_key: str
 
     # security
-    SECRET_KEY: str
-    ALGORITHM: str="HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int=30
+    secret_key: str
+    algorithm: str="HS256"
+    access_token_expire_minutes: int=30
 
     # app
     app_name: str = "Finance Analytics Platform"
-    ENVIRONMENT: str = "development"
+    environment: str = "development"
 
     # FMP API Configuration
-    FMP_API_KEY: str = ""
-    FMP_BASE_URL: str = "https://financialmodelingprep.com/api/v3"
-    FMP_RATE_LIMIT_DELAY: int = 1  # seconds between requests for free tier
+    fmp_api_key: str = ""
+    fmp_base_url: str = "https://financialmodelingprep.com/api/v3"
+    fmp_rate_limit_delay: int = 1  # seconds between requests for free tier
     
     # Data fetch limits (free tier constraints)
-    FMP_MAX_COMPANIES: int = 5  # FAANG companies
-    FMP_MAX_PERIODS: int = 20   # quarters per company
-    FMP_MAX_ARTICLES: int = 20  # articles per request
+    fmp_max_companies: int = 5  # FAANG companies
+    fmp_max_periods: int = 20   # quarters per company
+    fmp_max_articles: int = 20  # articles per request
 
     class Config:
         env_file = ".env"
