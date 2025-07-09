@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean, ForeignKey, Date, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..core.database import Base
@@ -44,6 +44,8 @@ class IncomeStatement(Base):
     
     company = relationship("Company", back_populates="income_statements")
 
+    __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc'),)
+
 class BalanceSheetStatement(Base):
     __tablename__ = 'balance_sheet_statements'
     id = Column(Integer, primary_key=True, index=True)
@@ -58,6 +60,8 @@ class BalanceSheetStatement(Base):
     
     company = relationship("Company", back_populates="balance_sheet_statements")
 
+    __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_balance'),)
+
 class CashFlowStatement(Base):
     __tablename__ = 'cash_flow_statements'
     id = Column(Integer, primary_key=True, index=True)
@@ -71,6 +75,8 @@ class CashFlowStatement(Base):
     net_cash_used_by_financing_activities = Column(Float)
     
     company = relationship("Company", back_populates="cash_flow_statements")
+
+    __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_cash'),)
 
 class RevenueSegment(Base):
 # Revenue Product Segmentation API
