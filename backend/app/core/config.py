@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     
     # Data fetch limits (free tier constraints)
     fmp_max_companies: int = 5  # FAANG companies
-    fmp_max_periods: int = 20   # quarters per company
+    fmp_max_periods: int = 5
     fmp_max_articles: int = 20  # articles per request
 
     # FAANG Symbol

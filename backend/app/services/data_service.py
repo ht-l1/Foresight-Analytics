@@ -1,6 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import inspect
 from app.core.config import settings
 from app.services.fmp_client import FMPClient
 from app.models.financial import Company, IncomeStatement, BalanceSheetStatement, CashFlowStatement, RevenueSegment, NewsArticle
@@ -9,10 +10,6 @@ from app.schemas.fmp_schemas import CompanyProfile as FMPCompanyProfile, IncomeS
 logger = logging.getLogger(__name__)
 
 async def get_or_create_company(db: Session, symbol: str, fmp_client: FMPClient) -> Company:
-    """
-    Retrieves a company from the DB or creates it if it doesn't exist,
-    fetching its profile from FMP.
-    """
     company = db.query(Company).filter(Company.symbol == symbol).first()
     if not company:
         logger.info(f"Company {symbol} not found in DB. Fetching from FMP...")
@@ -34,29 +31,37 @@ async def get_or_create_company(db: Session, symbol: str, fmp_client: FMPClient)
     return company
 
 async def sync_income_statements(db: Session, company: Company, fmp_client: FMPClient):
-    """Fetches and upserts income statements for a company."""
     logger.info(f"Syncing income statements for {company.symbol}")
     statements_data: list[FMPIncomeStatement] = await fmp_client.get_income_statement(
-        symbol=company.symbol, limit=settings.fmp_max_periods
+        symbol=company.symbol, period="FY", limit=settings.fmp_max_periods
     )
     
     if not statements_data:
         logger.warning(f"No income statements found for {company.symbol}")
         return
-
-    insert_stmt = insert(IncomeStatement).values([
-        {
+    
+    values_to_insert = []
+    for stmt in statements_data:
+        values_to_insert.append({
             "company_id": company.id,
             "symbol": stmt.symbol,
-            "date": stmt.date,
+            "date": stmt.report_date, 
             "period": stmt.period,
-            "calendar_year": stmt.calendarYear,
+            "fiscal_year": stmt.fiscal_Year,
             "revenue": stmt.revenue,
-            "net_income": stmt.netIncome,
+            "cost_of_revenue": stmt.cost_Of_Revenue,
+            "gross_profit": stmt.gross_Profit,
+            "net_income": stmt.net_Income,
             "eps": stmt.eps,
-            "epsdiluted": stmt.epsdiluted,
-        } for stmt in statements_data
-    ])
+            "epsdiluted": stmt.eps_diluted,  # Use snake_case here
+        })
+
+    if not values_to_insert:
+        logger.info(f"No new income statements to insert for {company.symbol}.")
+        return
+
+    # Use the prepared list of dictionaries to create the insert statement
+    insert_stmt = insert(IncomeStatement).values(values_to_insert)
 
     # Upsert logic: if symbol, date, and period conflict, do nothing.
     upsert_stmt = insert_stmt.on_conflict_do_nothing(
@@ -65,7 +70,6 @@ async def sync_income_statements(db: Session, company: Company, fmp_client: FMPC
     db.execute(upsert_stmt)
     db.commit()
     logger.info(f"Successfully upserted {len(statements_data)} income statements for {company.symbol}")
-
 
 async def sync_balance_sheet_statements(db: Session, company: Company, fmp_client: FMPClient):
     """Fetches and upserts balance sheet statements for a company."""
@@ -82,8 +86,8 @@ async def sync_balance_sheet_statements(db: Session, company: Company, fmp_clien
         {
             "company_id": company.id,
             "symbol": stmt.symbol,
-            "date": stmt.date,
-            "period": stmt.period,
+            "date": stmt.report_date,
+            # "period": stmt.period,
             "calendar_year": stmt.calendarYear,
             "total_assets": stmt.totalAssets,
             "total_liabilities": stmt.totalLiabilities,

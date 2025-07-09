@@ -34,7 +34,7 @@ class IncomeStatement(Base):
     symbol = Column(String(10), index=True, nullable=False)
     date = Column(Date, nullable=False, index=True)
     period = Column(String(10), nullable=False)
-    calendar_year = Column(String(4), nullable=False)
+    fiscal_year = Column(String(4), nullable=False)
     revenue = Column(Float)
     cost_of_revenue = Column(Float)
     gross_profit = Column(Float)

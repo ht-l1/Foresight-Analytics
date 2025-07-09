@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, AnyHttpUrl,field_validator, ConfigDict
 from typing import Optional, List
 from datetime import datetime, date
+from pydantic.alias_generators import to_camel
 
 class CompanyProfile(BaseModel):
     symbol: str = Field(..., description="The stock symbol of the company.")
@@ -58,44 +59,44 @@ class CompanyProfile(BaseModel):
 class IncomeStatement(BaseModel):
     report_date: date = Field(..., alias='date', description="The date of the financial statement.")
     symbol: str = Field(..., description="The stock symbol.")
-    reportedCurrency: str = Field(..., description="The currency the statement is reported in.")
+    reported_Currency: str = Field(..., description="The currency the statement is reported in.")
     cik: str = Field(..., description="CIK number.")
-    fillingDate: date = Field(..., description="The date the statement was filed.")
-    acceptedDate: datetime = Field(..., description="The date the filing was accepted.")
-    calendarYear: str = Field(..., description="The calendar year of the report.")
+    filing_Date: date = Field(..., description="The date the statement was filed.")
+    accepted_Date: datetime = Field(..., description="The date the filing was accepted.")
+    fiscal_Year: str = Field(..., description="The fiscal year of the report.")
     period: str = Field(..., description="The reporting period (e.g., 'Q1', 'FY').")
     revenue: float = Field(..., description="Total revenue.")
-    costOfRevenue: float = Field(..., description="Cost of revenue.")
-    grossProfit: float = Field(..., description="Gross profit.")
-    grossProfitRatio: float = Field(..., description="Gross profit ratio.")
-    researchAndDevelopmentExpenses: float = Field(..., description="R&D expenses.")
-    generalAndAdministrativeExpenses: float = Field(..., description="G&A expenses.")
-    sellingAndMarketingExpenses: float = Field(..., description="S&M expenses.")
-    sellingGeneralAndAdministrativeExpenses: float = Field(..., description="SG&A expenses.")
-    otherExpenses: float = Field(..., description="Other operating expenses.")
-    operatingExpenses: float = Field(..., description="Total operating expenses.")
-    costAndExpenses: float = Field(..., description="Total costs and expenses.")
-    interestIncome: float = Field(..., description="Interest income.")
-    interestExpense: float = Field(..., description="Interest expense.")
-    depreciationAndAmortization: float = Field(..., description="Depreciation and amortization.")
+    cost_Of_Revenue: float = Field(..., description="Cost of revenue.")
+    gross_Profit: float = Field(..., description="Gross profit.")
+    # gross_Profit_Ratio: float = Field(..., description="Gross profit ratio.")
+    research_And_Development_Expenses: float = Field(..., description="R&D expenses.")
+    general_And_Administrative_Expenses: float = Field(..., description="G&A expenses.")
+    selling_And_Marketing_Expenses: float = Field(..., description="S&M expenses.")
+    selling_General_And_Administrative_Expenses: float = Field(..., description="SG&A expenses.")
+    other_Expenses: float = Field(..., description="Other operating expenses.")
+    operating_Expenses: float = Field(..., description="Total operating expenses.")
+    cost_And_Expenses: float = Field(..., description="Total costs and expenses.")
+    interest_Income: float = Field(..., description="Interest income.")
+    interest_Expense: float = Field(..., description="Interest expense.")
+    depreciation_And_Amortization: float = Field(..., description="Depreciation and amortization.")
     ebitda: float = Field(..., description="Earnings Before Interest, Taxes, Depreciation, and Amortization.")
-    ebitdaratio: float = Field(..., description="EBITDA ratio.")
-    operatingIncome: float = Field(..., description="Operating income.")
-    operatingIncomeRatio: float = Field(..., description="Operating income ratio.")
-    totalOtherIncomeExpensesNet: float = Field(..., description="Net total other income/expenses.")
-    incomeBeforeTax: float = Field(..., description="Income before tax.")
-    incomeBeforeTaxRatio: float = Field(..., description="Income before tax ratio.")
-    incomeTaxExpense: float = Field(..., description="Income tax expense.")
-    netIncome: float = Field(..., description="Net income.")
-    netIncomeRatio: float = Field(..., description="Net income ratio.")
+    # ebitdaratio: float = Field(..., description="EBITDA ratio.")
+    operating_Income: float = Field(..., description="Operating income.")
+    # operatingIncomeRatio: float = Field(..., description="Operating income ratio.")
+    total_Other_Income_Expenses_Net: float = Field(..., description="Net total other income/expenses.")
+    income_Before_Tax: float = Field(..., description="Income before tax.")
+    # incomeBeforeTaxRatio: float = Field(..., description="Income before tax ratio.")
+    income_Tax_Expense: float = Field(..., description="Income tax expense.")
+    net_Income: float = Field(..., description="Net income.")
+    # netIncomeRatio: float = Field(..., description="Net income ratio.")
     eps: float = Field(..., description="Earnings per share.")
-    epsdiluted: float = Field(..., description="Diluted earnings per share.")
+    eps_diluted: float = Field(..., description="Diluted earnings per share.")
     weightedAverageShsOut: int = Field(..., description="Weighted average shares outstanding.")
     weightedAverageShsOutDil: int = Field(..., description="Diluted weighted average shares outstanding.")
     link: Optional[str] = Field(None, description="Link to the original filing.")
     finalLink: Optional[str] = Field(None, description="Final link to the filing.")
 
-    @field_validator('report_date', 'fillingDate', mode='before')
+    @field_validator('report_date', 'filing_Date', mode='before')
     @classmethod
     def parse_date(cls, v):
         if isinstance(v, str) and v:
@@ -105,7 +106,7 @@ class IncomeStatement(BaseModel):
                 return None
         return v
     
-    @field_validator('acceptedDate', mode='before')
+    @field_validator('accepted_Date', mode='before')
     @classmethod
     def parse_accepted_date(cls, v):
         if isinstance(v, str) and v:
@@ -116,6 +117,7 @@ class IncomeStatement(BaseModel):
         return v
 
     model_config = ConfigDict(
+        alias_generator=to_camel,
         from_attributes=True,
         populate_by_name=True,
     )

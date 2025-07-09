@@ -19,6 +19,9 @@
 - back end
     -  `uvicorn app.main:app --reload`
 
+## Docker 
+- `docker-compose up`
+
 ## Migration
 - `alembic revision --autogenerate -m "Description of changes"`
 - `alembic upgrade head`
