@@ -9,7 +9,7 @@ from .config import settings
 database_url = settings.neon_database_url or settings.database_url
 
 engine = create_engine(database_url)
-SessionLocal = sessionmaker(automcommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 

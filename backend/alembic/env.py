@@ -5,11 +5,13 @@ import os
 import sys
 
 # Add the backend directory to the path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import models
 from app.core.database import Base
-from app.models.financial import Company, FinancialStatement, RevenueSegment, MLPrediction, NewsArticle, ModelPerformance
+# from app.models.financial import Company, IncomeStatement,BalanceSheetStatement, CashFlowStatement, RevenueSegment, MLPrediction, NewsArticle, ModelPerformance
+from app.models import financial
 
 # Alembic Config object
 config = context.config

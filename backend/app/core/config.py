@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     fmp_max_periods: int = 20   # quarters per company
     fmp_max_articles: int = 20  # articles per request
 
+    # FAANG Symbol
+    FAANG_SYMBOLS: list[str] = ["META", "AAPL", "AMZN", "NFLX", "GOOGL"]
+
     model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
