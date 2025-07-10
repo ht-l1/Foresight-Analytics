@@ -271,3 +271,151 @@ class FMPArticle(BaseModel):
         from_attributes=True,
         populate_by_name=True,
     )
+
+class KeyMetrics(BaseModel):
+    symbol: str = Field(..., description="The stock symbol of the company.")
+    date: str = Field(..., description="The date of the financial report.")
+    fiscal_year: str = Field(..., alias="fiscalYear", description="The fiscal year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'FY' for fiscal year, 'Q1' for first quarter).")
+    reported_currency: str = Field(..., alias="reportedCurrency", description="The currency in which the report is filed.")
+    market_cap: float = Field(..., alias="marketCap", description="The total market value of the company's outstanding shares.")
+    enterprise_value: float = Field(..., alias="enterpriseValue", description="A measure of a company's total value.")
+    ev_to_sales: float = Field(..., alias="evToSales", description="Enterprise Value to Sales ratio.")
+    ev_to_operating_cash_flow: float = Field(..., alias="evToOperatingCashFlow", description="Enterprise Value to Operating Cash Flow ratio.")
+    ev_to_free_cash_flow: float = Field(..., alias="evToFreeCashFlow", description="Enterprise Value to Free Cash Flow ratio.")
+    ev_to_ebitda: float = Field(..., alias="evToEBITDA", description="Enterprise Value to EBITDA ratio.")
+    net_debt_to_ebitda: float = Field(..., alias="netDebtToEBITDA", description="Net Debt to EBITDA ratio.")
+    current_ratio: float = Field(..., alias="currentRatio", description="Measures a company's ability to pay short-term obligations.")
+    income_quality: float = Field(..., alias="incomeQuality", description="Ratio of operating cash flow to net income.")
+    graham_number: float = Field(..., alias="grahamNumber", description="A theoretical intrinsic value of a stock.")
+    working_capital: float = Field(..., alias="workingCapital", description="The difference between current assets and current liabilities.")
+    invested_capital: float = Field(..., alias="investedCapital", description="The total amount of money raised by a company by issuing securities.")
+    return_on_assets: float = Field(..., alias="returnOnAssets", description="Indicator of how profitable a company is relative to its total assets.")
+    return_on_equity: float = Field(..., alias="returnOnEquity", description="The amount of net income returned as a percentage of shareholders equity.")
+    return_on_invested_capital: float = Field(..., alias="returnOnInvestedCapital", description="Measures the return that an investment generates for those who have provided capital.")
+    earnings_yield: float = Field(..., alias="earningsYield", description="The earnings per share for the most recent 12-month period divided by the current market price per share.")
+    free_cash_flow_yield: float = Field(..., alias="freeCashFlowYield", description="A company's free cash flow per share divided by its market price per share.")
+    capex_to_operating_cash_flow: float = Field(..., alias="capexToOperatingCashFlow", description="Capital Expenditures to Operating Cash Flow ratio.")
+    capex_to_revenue: float = Field(..., alias="capexToRevenue", description="Capital Expenditures to Revenue ratio.")
+    research_and_developement_to_revenue: float = Field(..., alias="researchAndDevelopementToRevenue", description="R&D to Revenue ratio.")
+    stock_based_compensation_to_revenue: float = Field(..., alias="stockBasedCompensationToRevenue", description="Stock-Based Compensation to Revenue ratio.")
+    days_of_sales_outstanding: float = Field(..., alias="daysOfSalesOutstanding", description="Average number of days that it takes a company to collect payment for a sale.")
+    days_of_payables_outstanding: float = Field(..., alias="daysOfPayablesOutstanding", description="Average number of days a company takes to pay its suppliers.")
+    days_of_inventory_outstanding: float = Field(..., alias="daysOfInventoryOutstanding", description="Average number of days a company holds its inventory before selling it.")
+    operating_cycle: float = Field(..., alias="operatingCycle", description="The time it takes a company to receive inventory, sell it, and collect cash.")
+    cash_conversion_cycle: float = Field(..., alias="cashConversionCycle", description="The time it takes for a company to convert its investments in inventory and other resources into cash.")
+
+    @field_validator('date', mode='before')
+    @classmethod
+    def parse_published_date(cls, v):
+        if isinstance(v, str) and v:
+            return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
+        return v
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+
+class FinancialRatios(BaseModel):
+    symbol: str = Field(..., description="The stock symbol of the company.")
+    date: str = Field(..., description="The date of the financial report.")
+    fiscal_year: str = Field(..., alias="fiscalYear", description="The fiscal year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'FY').")
+    gross_profit_margin: float = Field(..., alias="grossProfitMargin", description="Gross profit as a percentage of revenue.")
+    net_profit_margin: float = Field(..., alias="netProfitMargin", description="Net profit as a percentage of revenue.")
+    receivables_turnover: float = Field(..., alias="receivablesTurnover", description="How efficiently a company uses its assets.")
+    inventory_turnover: float = Field(..., alias="inventoryTurnover", description="Shows how many times a company has sold and replaced inventory during a given period.")
+    asset_turnover: float = Field(..., alias="assetTurnover", description="The ratio of total sales or revenue to average assets.")
+    current_ratio: float = Field(..., alias="currentRatio", description="Measures a company's ability to pay short-term obligations.")
+    quick_ratio: float = Field(..., alias="quickRatio", description="Measures a company's ability to meet its short-term obligations with its most liquid assets.")
+    price_to_earnings_ratio: float = Field(..., alias="priceToEarningsRatio", description="The ratio for valuing a company that measures its current share price relative to its per-share earnings.")
+    price_to_book_ratio: float = Field(..., alias="priceToBookRatio", description="Compares a company's market capitalization to its book value.")
+    price_to_sales_ratio: float = Field(..., alias="priceToSalesRatio", description="Compares a company's stock price to its revenue.")
+    price_to_free_cash_flow_ratio: float = Field(..., alias="priceToFreeCashFlowRatio", description="Compares a company's market capitalization to its free cash flow.")
+    debt_to_equity_ratio: float = Field(..., alias="debtToEquityRatio", description="Total debt and financial liabilities against shareholders' equity.")
+    dividend_payout_ratio: float = Field(..., alias="dividendPayoutRatio", description="The proportion of earnings paid out as dividends to shareholders.")
+    dividend_yield: float = Field(..., alias="dividendYield", description="A financial ratio that shows how much a company pays out in dividends each year relative to its stock price.")
+    return_on_equity: float = Field(..., alias="returnOnEquity", description="The amount of net income returned as a percentage of shareholders equity.")
+    revenue_per_share: float = Field(..., alias="revenuePerShare", description="Total revenue divided by the number of shares outstanding.")
+    net_income_per_share: float = Field(..., alias="netIncomePerShare", description="Net income divided by the number of shares outstanding.")
+    operating_cash_flow_per_share: float = Field(..., alias="operatingCashFlowPerShare", description="Operating cash flow divided by the number of shares outstanding.")
+    free_cash_flow_per_share: float = Field(..., alias="freeCashFlowPerShare", description="Free cash flow divided by the number of shares outstanding.")
+    effective_tax_rate: float = Field(..., alias="effectiveTaxRate", description="The percent of its income that an individual or a corporation pays in taxes.")
+
+    @field_validator('date', mode='before')
+    @classmethod
+    def parse_published_date(cls, v):
+        if isinstance(v, str) and v:
+            return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
+        return v
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+
+class KeyMetricsTTM(BaseModel):
+    symbol: str = Field(..., description="The stock symbol of the company.")
+    market_cap: float = Field(..., alias="marketCap", description="The total market value of the company's outstanding shares.")
+    enterprise_value_ttm: float = Field(..., alias="enterpriseValueTTM", description="A measure of a company's total value (TTM).")
+    ev_to_sales_ttm: float = Field(..., alias="evToSalesTTM", description="Enterprise Value to Sales ratio (TTM).")
+    ev_to_free_cash_flow_ttm: float = Field(..., alias="evToFreeCashFlowTTM", description="Enterprise Value to Free Cash Flow ratio (TTM).")
+    ev_to_ebitda_ttm: float = Field(..., alias="evToEBITDATTM", description="Enterprise Value to EBITDA ratio (TTM).")
+    net_debt_to_ebitda_ttm: float = Field(..., alias="netDebtToEBITDATTM", description="Net Debt to EBITDA ratio (TTM).")
+    current_ratio_ttm: float = Field(..., alias="currentRatioTTM", description="Measures ability to pay short-term obligations (TTM).")
+    return_on_equity_ttm: float = Field(..., alias="returnOnEquityTTM", description="Net income as a percentage of shareholders equity (TTM).")
+    earnings_yield_ttm: float = Field(..., alias="earningsYieldTTM", description="Earnings per share relative to market price (TTM).")
+    free_cash_flow_yield_ttm: float = Field(..., alias="freeCashFlowYieldTTM", description="Free cash flow per share relative to market price (TTM).")
+    capex_to_revenue_ttm: float = Field(..., alias="capexToRevenueTTM", description="Capital Expenditures to Revenue ratio (TTM).")
+    research_and_developement_to_revenue_ttm: float = Field(..., alias="researchAndDevelopementToRevenueTTM", description="R&D to Revenue ratio (TTM).")
+    cash_conversion_cycle_ttm: float = Field(..., alias="cashConversionCycleTTM", description="Time to convert investments into cash (TTM).")
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def parse_published_date(cls, v):
+        if isinstance(v, str) and v:
+            return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
+        return v
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+
+class FinancialRatiosTTM(BaseModel):
+    symbol: str = Field(..., description="The stock symbol of the company.")
+    gross_profit_margin_ttm: float = Field(..., alias="grossProfitMarginTTM", description="Gross profit as a percentage of revenue (TTM).")
+    net_profit_margin_ttm: float = Field(..., alias="netProfitMarginTTM", description="Net profit as a percentage of revenue (TTM).")
+    asset_turnover_ttm: float = Field(..., alias="assetTurnoverTTM", description="Ratio of total sales to average assets (TTM).")
+    current_ratio_ttm: float = Field(..., alias="currentRatioTTM", description="Measures ability to pay short-term obligations (TTM).")
+    price_to_earnings_ratio_ttm: float = Field(..., alias="priceToEarningsRatioTTM", description="Share price relative to per-share earnings (TTM).")
+    price_to_sales_ratio_ttm: float = Field(..., alias="priceToSalesRatioTTM", description="Compares stock price to revenue (TTM).")
+    price_to_free_cash_flow_ratio_ttm: float = Field(..., alias="priceToFreeCashFlowRatioTTM", description="Market cap to free cash flow (TTM).")
+    debt_to_equity_ratio_ttm: float = Field(..., alias="debtToEquityRatioTTM", description="Total debt against shareholders' equity (TTM).")
+    dividend_payout_ratio_ttm: float = Field(..., alias="dividendPayoutRatioTTM", description="Proportion of earnings paid as dividends (TTM).")
+    dividend_yield_ttm: float = Field(..., alias="dividendYieldTTM", description="Annual dividend per share as a percentage of the stock's price (TTM).")
+    return_on_equity_ttm: float = Field(..., alias="returnOnEquityTTM", description="Net income as a percentage of shareholders equity (TTM).")
+    net_income_per_share_ttm: float = Field(..., alias="netIncomePerShareTTM", description="Net income per share (TTM).")
+    free_cash_flow_per_share_ttm: float = Field(..., alias="freeCashFlowPerShareTTM", description="Free cash flow per share (TTM).")
+    effective_tax_rate_ttm: float = Field(..., alias="effectiveTaxRateTTM", description="The percent of income a corporation pays in taxes (TTM).")
+    enterprise_value_ttm: float = Field(..., alias="enterpriseValueTTM", description="A measure of a company's total value (TTM).")
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def parse_published_date(cls, v):
+        if isinstance(v, str) and v:
+            return datetime.strptime(v[:19], '%Y-%m-%d %H:%M:%S')
+        return v
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        from_attributes=True,
+        populate_by_name=True,
+    )

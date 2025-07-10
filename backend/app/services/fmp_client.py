@@ -153,3 +153,23 @@ class FMPClient:
         except ValidationError as e:
             logger.error(f"Data validation failed for FMP Articles: {e.errors()}")
             raise DataValidationError(model="FMPArticleList", errors=e.errors())
+        
+    async def get_key_metrics(self, symbol: str, period: str = "annual", limit: int = 40) -> list[fmp_schemas.KeyMetrics]:
+        params = {"period": period, "limit": limit}
+        return await self._get(f"key-metrics/{symbol}", params=params, response_model=list[fmp_schemas.KeyMetrics])
+
+    async def get_financial_ratios(self, symbol: str, period: str = "annual", limit: int = 40) -> list[fmp_schemas.FinancialRatios]:
+        params = {"period": period, "limit": limit}
+        return await self._get(f"ratios/{symbol}", params=params, response_model=list[fmp_schemas.FinancialRatios])
+
+    async def get_key_metrics_ttm(self, symbol: str) -> fmp_schemas.KeyMetricsTTM:
+        response = await self._get(f"key-metrics-ttm/{symbol}", response_model=list[fmp_schemas.KeyMetricsTTM])
+        if not response:
+            raise ValueError(f"No TTM key metrics found for symbol: {symbol}")
+        return response[0]
+
+    async def get_financial_ratios_ttm(self, symbol: str) -> fmp_schemas.FinancialRatiosTTM:
+        response = await self._get(f"ratios-ttm/{symbol}", response_model=list[fmp_schemas.FinancialRatiosTTM])
+        if not response:
+            raise ValueError(f"No TTM financial ratios found for symbol: {symbol}")
+        return response[0]
