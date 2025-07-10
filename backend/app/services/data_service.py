@@ -72,10 +72,9 @@ async def sync_income_statements(db: Session, company: Company, fmp_client: FMPC
     logger.info(f"Successfully upserted {len(statements_data)} income statements for {company.symbol}")
 
 async def sync_balance_sheet_statements(db: Session, company: Company, fmp_client: FMPClient):
-    """Fetches and upserts balance sheet statements for a company."""
     logger.info(f"Syncing balance sheet statements for {company.symbol}")
     statements_data: list[FMPBalanceSheet] = await fmp_client.get_balance_sheet_statement(
-        symbol=company.symbol, limit=settings.fmp_max_periods
+        symbol=company.symbol, period="FY", limit=settings.fmp_max_periods
     )
 
     if not statements_data:
@@ -87,11 +86,11 @@ async def sync_balance_sheet_statements(db: Session, company: Company, fmp_clien
             "company_id": company.id,
             "symbol": stmt.symbol,
             "date": stmt.report_date,
-            # "period": stmt.period,
-            "calendar_year": stmt.calendarYear,
-            "total_assets": stmt.totalAssets,
-            "total_liabilities": stmt.totalLiabilities,
-            "total_stockholders_equity": stmt.totalStockholdersEquity,
+            "period": stmt.period,
+            "fiscal_year": stmt.fiscal_Year,
+            "total_assets": stmt.total_Assets,
+            "total_liabilities": stmt.total_Liabilities,
+            "total_stockholders_equity": stmt.total_Stockholders_Equity,
         } for stmt in statements_data
     ])
     
@@ -104,10 +103,9 @@ async def sync_balance_sheet_statements(db: Session, company: Company, fmp_clien
 
 
 async def sync_cash_flow_statements(db: Session, company: Company, fmp_client: FMPClient):
-    """Fetches and upserts cash flow statements for a company."""
     logger.info(f"Syncing cash flow statements for {company.symbol}")
     statements_data: list[FMPCashFlow] = await fmp_client.get_cash_flow_statement(
-        symbol=company.symbol, limit=settings.fmp_max_periods
+        symbol=company.symbol, period="FY", limit=settings.fmp_max_periods
     )
 
     if not statements_data:
@@ -118,12 +116,12 @@ async def sync_cash_flow_statements(db: Session, company: Company, fmp_client: F
         {
             "company_id": company.id,
             "symbol": stmt.symbol,
-            "date": stmt.date,
+            "date": stmt.report_date,
             "period": stmt.period,
-            "calendar_year": stmt.calendarYear,
-            "net_cash_provided_by_operating_activities": stmt.netCashProvidedByOperatingActivities,
-            "net_cash_used_for_investing_activities": stmt.netCashUsedForInvestingActivites,
-            "net_cash_used_by_financing_activities": stmt.netCashUsedProvidedByFinancingActivities,
+            "fiscal_year": stmt.fiscal_Year,
+            "net_cash_provided_by_operating_activities": stmt.net_Cash_Provided_By_Operating_Activities,
+            "net_cash_used_for_investing_activities": stmt.net_Cash_Used_For_Investing_Activities,
+            "net_cash_used_by_financing_activities": stmt.net_Cash_Used_Provided_By_Financing_Activities,
         } for stmt in statements_data
     ])
     
@@ -156,10 +154,9 @@ async def sync_all_financials_for_symbol(symbol: str, db: Session):
             db.rollback()
 
 async def sync_revenue_segments(db: Session, company: Company, fmp_client: FMPClient):
-    """Fetches and upserts revenue segmentation for a company."""
     logger.info(f"Syncing revenue segments for {company.symbol}")
     try:
-        segments_data: list[RevenueSegment] = await fmp_client.get_revenue_segments(symbol=company.symbol)
+        segments_data: list[RevenueSegment] = await fmp_client.get_revenue_segments(symbol=company.symbol, period="FY")
         
         if not segments_data:
             logger.warning(f"No revenue segments found for {company.symbol}")
@@ -169,9 +166,11 @@ async def sync_revenue_segments(db: Session, company: Company, fmp_client: FMPCl
             {
                 "company_id": company.id,
                 "symbol": seg.symbol,
-                "date": seg.date,
-                "segment_name": seg.segment,
-                "revenue": seg.revenue,
+                "fiscal_Year": seg.fiscal_Year,
+                "period": seg.period,
+                "date": seg.report_date,
+                "segment_name": seg.segment_Name,
+                "segment_revenue": seg.segment_Revenue,
             } for seg in segments_data
         ])
 
@@ -188,37 +187,46 @@ async def sync_revenue_segments(db: Session, company: Company, fmp_client: FMPCl
 
 
 async def sync_articles(db: Session, symbols: list[str], fmp_client: FMPClient):
-    """Fetches and upserts news articles for a list of symbols."""
     logger.info(f"Syncing news articles for symbols: {', '.join(symbols)}")
     try:
-        articles_data: list[FMPArticle] = await fmp_client.get_stock_news(
-            symbols=symbols, limit=settings.fmp_max_articles
+        articles_data: list[FMPArticle] = await fmp_client.get_fmp_articles(
+            limit=settings.fmp_max_articles
         )
         
         if not articles_data:
             logger.warning("No new articles found.")
             return
 
-        # map article symbols to company_ids
+        # Extract symbols from tickers field and map to company_ids
         companies = db.query(Company).filter(Company.symbol.in_(symbols)).all()
         symbol_to_id_map = {c.symbol: c.id for c in companies}
 
-        insert_stmt = insert(NewsArticle).values([
-            {
-                "company_id": symbol_to_id_map.get(art.symbol),
-                "symbol": art.symbol,
-                "title": art.title,
-                "url": art.url,
-                "text": art.text,
-                "published_date": art.publishedDate,
-                "site": art.site,
-            } for art in articles_data if symbol_to_id_map.get(art.symbol) is not None
-        ])
+        articles_to_insert = []
+        for art in articles_data:
+            # Extract symbol from tickers (e.g., "NASDAQ:WING" -> "WING")
+            if hasattr(art, 'tickers') and art.tickers:
+                symbol = art.tickers.split(':')[-1]  # Get the part after ':'
+                company_id = symbol_to_id_map.get(symbol)
+                
+                if company_id is not None:
+                    articles_to_insert.append({
+                        "title": art.title,
+                        "url": art.url,
+                        "published_date": art.published_Date,
+                        "author": art.author,
+                        "source": art.source,
+                        "snippet": art.snippet,
+                        "mentioned_symbols": symbol, 
+                    })
 
-        upsert_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['url'])
-        db.execute(upsert_stmt)
-        db.commit()
-        logger.info(f"Successfully upserted {len(articles_data)} articles.")
+        if articles_to_insert:
+            insert_stmt = insert(NewsArticle).values(articles_to_insert)
+            upsert_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['url'])
+            db.execute(upsert_stmt)
+            db.commit()
+            logger.info(f"Successfully upserted {len(articles_to_insert)} articles.")
+        else:
+            logger.warning("No articles matched the requested symbols.")
 
     except Exception as e:
         logger.error(f"Could not sync articles: {e}", exc_info=True)

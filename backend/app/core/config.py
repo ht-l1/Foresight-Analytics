@@ -29,7 +29,6 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     # FMP API Configuration
-    fmp_api_key: str = ""
     fmp_base_url: str = "https://financialmodelingprep.com/stable"
     fmp_rate_limit_delay: int = 1  # seconds between requests for free tier
     

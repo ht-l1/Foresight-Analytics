@@ -125,21 +125,24 @@ class IncomeStatement(BaseModel):
 class BalanceSheetStatement(BaseModel):
     report_date: date = Field(..., alias='date', description="Date of the balance sheet.")
     symbol: str = Field(..., description="Stock symbol.")
-    cashAndCashEquivalents: float = Field(..., description="Cash and cash equivalents.")
-    shortTermInvestments: float = Field(..., description="Short-term investments.")
-    netReceivables: float = Field(..., description="Net receivables.")
+    fiscal_Year: str = Field(..., description="The fiscal year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'Q1', 'FY').")
+    cash_And_Cash_Equivalents: float = Field(..., description="Cash and cash equivalents.")
+    short_Term_Investments: float = Field(..., description="Short-term investments.")
+    net_Receivables: float = Field(..., description="Net receivables.")
     inventory: float = Field(..., description="Inventory.")
-    totalCurrentAssets: float = Field(..., description="Total current assets.")
-    propertyPlantEquipmentNet: float = Field(..., description="Net property, plant, and equipment.")
-    goodwillAndIntangibleAssets: float = Field(..., description="Goodwill and intangible assets.")
-    totalAssets: float = Field(..., description="Total assets.")
-    accountPayables: float = Field(..., description="Accounts payable.")
-    shortTermDebt: float = Field(..., description="Short-term debt.")
-    totalCurrentLiabilities: float = Field(..., description="Total current liabilities.")
-    longTermDebt: float = Field(..., description="Long-term debt.")
-    totalLiabilities: float = Field(..., description="Total liabilities.")
-    totalStockholdersEquity: float = Field(..., description="Total stockholders' equity.")
-    totalLiabilitiesAndStockholdersEquity: float = Field(..., description="Total liabilities and stockholders' equity.")
+    total_Current_Assets: float = Field(..., description="Total current assets.")
+    property_Plant_Equipment_Net: float = Field(..., description="Net property, plant, and equipment.")
+    goodwill_And_Intangible_Assets: float = Field(..., description="Goodwill and intangible assets.")
+    total_Assets: float = Field(..., description="Total assets.")
+    account_Payables: float = Field(..., description="Accounts payable.")
+    short_Term_Debt: float = Field(..., description="Short-term debt.")
+    total_Current_Liabilities: float = Field(..., description="Total current liabilities.")
+    long_Term_Debt: float = Field(..., description="Long-term debt.")
+    total_Liabilities: float = Field(..., description="Total liabilities.")
+    total_Stockholders_Equity: float = Field(..., description="Total stockholders' equity.")
+    total_Liabilities_And_Stockholders_Equity: Optional[float] = Field(None,
+    description="Total liabilities and stockholders' equity.")
 
     @field_validator('report_date', mode='before')
     @classmethod
@@ -149,43 +152,67 @@ class BalanceSheetStatement(BaseModel):
         return v
     
     model_config = ConfigDict(
+        alias_generator=to_camel,
         from_attributes=True,
         populate_by_name=True,
     )
 
 class CashFlowStatement(BaseModel):
     report_date: date = Field(..., alias='date', description="Date of the cash flow statement.")
+    fiscal_Year: str = Field(..., alias="fiscalYear", description="The fiscal year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'Q1', 'FY').")
     symbol: str = Field(..., description="Stock symbol.")
-    netIncome: float = Field(..., description="Net income.")
-    depreciationAndAmortization: float = Field(..., description="Depreciation and amortization.")
-    deferredIncomeTax: float = Field(..., description="Deferred income tax.")
-    stockBasedCompensation: float = Field(..., description="Stock-based compensation.")
-    changeInWorkingCapital: float = Field(..., description="Change in working capital.")
-    accountsReceivables: float = Field(..., description="Accounts receivables.")
+    reported_currency: str = Field(..., alias='reportedCurrency', description="Reported currency.")
+    cik: str = Field(..., description="CIK identifier.")
+    filing_date: date = Field(..., alias='filingDate', description="Filing date.")
+    accepted_date: datetime = Field(..., alias='acceptedDate', description="Accepted date/time.")
+
+    net_Income: float = Field(..., alias="netIncome", description="Net income.")
+    depreciation_And_Amortization: float = Field(..., alias="depreciationAndAmortization", description="Depreciation and amortization.")
+    deferred_Income_Tax: float = Field(..., alias="deferredIncomeTax", description="Deferred income tax.")
+    stock_Based_Compensation: float = Field(..., alias="stockBasedCompensation", description="Stock-based compensation.")
+    change_In_Working_Capital: float = Field(..., alias="changeInWorkingCapital", description="Change in working capital.")
+    accounts_Receivables: float = Field(..., alias="accountsReceivables", description="Accounts receivables.")
     inventory: float = Field(..., description="Inventory.")
-    accountsPayables: float = Field(..., description="Accounts payables.")
-    otherWorkingCapital: float = Field(..., description="Other working capital.")
-    otherNonCashItems: float = Field(..., description="Other non-cash items.")
-    netCashProvidedByOperatingActivities: float = Field(..., description="Net cash from operating activities.")
-    investmentsInPropertyPlantAndEquipment: float = Field(..., description="Investments in PP&E.")
-    acquisitionsNet: float = Field(..., description="Net acquisitions.")
-    purchasesOfInvestments: float = Field(..., description="Purchases of investments.")
-    salesMaturitiesOfInvestments: float = Field(..., description="Sales and maturities of investments.")
-    otherInvestingActivites: float = Field(..., description="Other investing activities.")
-    netCashUsedForInvestingActivites: float = Field(..., description="Net cash used for investing activities.")
-    debtRepayment: float = Field(..., description="Debt repayment.")
-    commonStockIssued: float = Field(..., description="Common stock issued.")
-    commonStockRepurchased: float = Field(..., description="Common stock repurchased.")
-    dividendsPaid: float = Field(..., description="Dividends paid.")
-    otherFinancingActivites: float = Field(..., description="Other financing activities.")
-    netCashUsedProvidedByFinancingActivities: float = Field(..., description="Net cash from financing activities.")
-    effectOfForexChangesOnCash: float = Field(..., description="Effect of foreign exchange on cash.")
-    netChangeInCash: float = Field(..., description="Net change in cash.")
-    cashAtEndOfPeriod: float = Field(..., description="Cash at end of period.")
-    cashAtBeginningOfPeriod: float = Field(..., description="Cash at beginning of period.")
-    operatingCashFlow: float = Field(..., description="Operating cash flow.")
-    capitalExpenditure: float = Field(..., description="Capital expenditure.")
-    freeCashFlow: float = Field(..., description="Free cash flow.")
+    accounts_Payables: float = Field(..., alias="accountsPayables", description="Accounts payables.")
+    other_Working_Capital: float = Field(..., alias="otherWorkingCapital", description="Other working capital.")
+    other_Non_Cash_Items: float = Field(..., alias="otherNonCashItems", description="Other non-cash items.")
+
+    net_Cash_Provided_By_Operating_Activities: float = Field(..., alias="netCashProvidedByOperatingActivities", description="Net cash from operating activities.")
+    investments_In_Property_Plant_And_Equipment: float = Field(..., alias="investmentsInPropertyPlantAndEquipment", description="Investments in PP&E.")
+    acquisitions_Net: float = Field(..., alias="acquisitionsNet", description="Net acquisitions.")
+    purchases_Of_Investments: float = Field(..., alias="purchasesOfInvestments", description="Purchases of investments.")
+    sales_Maturities_Of_Investments: float = Field(..., alias="salesMaturitiesOfInvestments", description="Sales and maturities of investments.")
+    other_Investing_Activities: float = Field(..., alias="otherInvestingActivities", description="Other investing activities.")
+    net_Cash_Used_For_Investing_Activities: float = Field(..., alias="netCashProvidedByInvestingActivities", description="Net cash from investing activities.")
+
+    debt_Repayment: float = Field(..., alias="netDebtIssuance", description="Net debt issuance (repayment if negative).")
+    long_term_net_debt_issuance: float = Field(..., alias="longTermNetDebtIssuance", description="Long-term net debt issuance.")
+    short_term_net_debt_issuance: float = Field(..., alias="shortTermNetDebtIssuance", description="Short-term net debt issuance.")
+
+    net_stock_issuance: float = Field(..., alias="netStockIssuance", description="Net stock issuance.")
+    net_common_stock_issuance: float = Field(..., alias="netCommonStockIssuance", description="Net common stock issuance.")
+    common_stock_issuance: float = Field(..., alias="commonStockIssuance", description="Common stock issuance.")
+    common_Stock_Repurchased: float = Field(..., alias="commonStockRepurchased", description="Common stock repurchased.")
+
+    net_preferred_stock_issuance: float = Field(..., alias="netPreferredStockIssuance", description="Net preferred stock issuance.")
+    net_dividends_paid: float = Field(..., alias="netDividendsPaid", description="Net dividends paid.")
+    dividends_Paid: float = Field(..., alias="commonDividendsPaid", description="Common dividends paid.")
+    preferred_dividends_paid: float = Field(..., alias="preferredDividendsPaid", description="Preferred dividends paid.")
+    other_Financing_Activities: float = Field(..., alias="otherFinancingActivities", description="Other financing activities.")
+    net_Cash_Used_Provided_By_Financing_Activities: float = Field(..., alias="netCashProvidedByFinancingActivities", description="Net cash from financing activities.")
+
+    effect_Of_Forex_Changes_On_Cash: float = Field(..., alias="effectOfForexChangesOnCash", description="Effect of foreign exchange on cash.")
+    net_Change_In_Cash: float = Field(..., alias="netChangeInCash", description="Net change in cash.")
+    cash_At_End_Of_Period: float = Field(..., alias="cashAtEndOfPeriod", description="Cash at end of period.")
+    cash_At_Beginning_Of_Period: float = Field(..., alias="cashAtBeginningOfPeriod", description="Cash at beginning of period.")
+
+    operating_Cash_Flow: float = Field(..., alias="operatingCashFlow", description="Operating cash flow.")
+    capital_Expenditure: float = Field(..., alias="capitalExpenditure", description="Capital expenditure.")
+    free_Cash_Flow: float = Field(..., alias="freeCashFlow", description="Free cash flow.")
+
+    income_taxes_paid: float = Field(..., alias="incomeTaxesPaid", description="Income taxes paid.")
+    interest_paid: float = Field(..., alias="interestPaid", description="Interest paid.")
 
     @field_validator('report_date', mode='before')
     @classmethod
@@ -195,15 +222,19 @@ class CashFlowStatement(BaseModel):
         return v
     
     model_config = ConfigDict(
+        alias_generator=to_camel,
         from_attributes=True,
         populate_by_name=True,
     )
 
 class RevenueSegment(BaseModel):
-    report_date: date = Field(..., alias='date', description="Date of the segment data.")
+    report_date: date = Field(..., alias='date', 
+    description="Date of the segment data.")
+    fiscal_Year: str = Field(..., description="The fiscal year of the report.")
+    period: str = Field(..., description="The reporting period (e.g., 'Q1', 'FY').")
     symbol: str = Field(..., description="Stock symbol.")
-    segmentName: str = Field(..., description="Name of the business segment.")
-    segmentRevenue: float = Field(..., description="Revenue for the segment.")
+    segment_Name: str = Field(..., description="Name of the business segment.")
+    segment_Revenue: float = Field(..., description="Revenue for the segment.")
 
     @field_validator('report_date', mode='before')
     @classmethod
@@ -213,20 +244,22 @@ class RevenueSegment(BaseModel):
         return v
     
     model_config = ConfigDict(
+        alias_generator=to_camel,
         from_attributes=True,
         populate_by_name=True,
     )
 
 class FMPArticle(BaseModel):
-    title: str = Field(..., description="Title of the article.")
-    publishedDate: datetime = Field(..., description="Publication date and time.")
-    author: str = Field(..., description="Author of the article.")
-    url: str = Field(..., description="URL to the full article.")
-    snippet: str = Field(..., description="A short snippet or summary of the article.")
-    source: str = Field(..., description="Source of the article (e.g., 'Financial Modeling Prep').")
-    tags: Optional[List[str]] = Field(None, description="List of tags associated with the article.")
+    title: str
+    published_Date: datetime = Field(alias="date")
+    author: str
+    url: str = Field(alias="link")
+    snippet: str = Field(alias="content")
+    source: str = Field(alias="site")
+    tickers: str
+    image: Optional[str] = None
     
-    @field_validator('publishedDate', mode='before')
+    @field_validator('published_Date', mode='before')
     @classmethod
     def parse_published_date(cls, v):
         if isinstance(v, str) and v:
@@ -234,6 +267,7 @@ class FMPArticle(BaseModel):
         return v
     
     model_config = ConfigDict(
+        alias_generator=to_camel,
         from_attributes=True,
         populate_by_name=True,
     )

@@ -23,6 +23,7 @@
 - `docker-compose up`
 
 ## Migration
+- `docker-compose exec backend /bin/bash`
 - `alembic revision --autogenerate -m "Description of changes"`
 - `alembic upgrade head`
 

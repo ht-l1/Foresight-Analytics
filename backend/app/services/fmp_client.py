@@ -120,8 +120,27 @@ class FMPClient:
     async def get_revenue_segments(self, symbol: str, period: str = "annual") -> List[fmp_schemas.RevenueSegment]:
         params = {"symbol": symbol, "period": period}
         try:
-            data = await self._make_request("revenue-product-segmentation", params)
-            return [fmp_schemas.RevenueSegment.model_validate(item) for item in data]
+            raw_data = await self._make_request("revenue-product-segmentation", params)
+            segments = []
+
+            for item in raw_data:
+                base_fields = {
+                    "symbol": item["symbol"],
+                    "fiscal_Year": str(item["fiscalYear"]),
+                    "period": item["period"],
+                    "date": item["date"], 
+                }
+
+                for segment_name, segment_revenue in item.get("data", {}).items():
+                    segment = fmp_schemas.RevenueSegment(
+                        **base_fields,
+                        segment_Name=segment_name,
+                        segment_Revenue=segment_revenue,
+                    )
+                    segments.append(segment)
+
+            return segments
+
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} RevenueSegments: {e.errors()}")
             raise DataValidationError(model="RevenueSegmentList", errors=e.errors())
