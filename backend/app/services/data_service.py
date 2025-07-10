@@ -5,7 +5,7 @@ from sqlalchemy import inspect
 from app.core.config import settings
 from app.services.fmp_client import FMPClient
 from app.models.financial import Company, IncomeStatement, BalanceSheetStatement, CashFlowStatement, RevenueSegment, NewsArticle
-from app.schemas.fmp_schemas import CompanyProfile as FMPCompanyProfile, IncomeStatement as FMPIncomeStatement, BalanceSheetStatement as FMPBalanceSheet, CashFlowStatement as FMPCashFlow, RevenueSegment as FMPRevenueSegment, FMPArticle
+from app.schemas.fmp_schemas import CompanyProfile as FMPCompanyProfile, IncomeStatement as FMPIncomeStatement, BalanceSheetStatement as FMPBalanceSheet, CashFlowStatement as FMPCashFlow, RevenueSegment as FMPRevenueSegment, FMPArticle, KeyMetrics,KeyMetricsTTM,FinancialRatios,FinancialRatiosTTM
 
 logger = logging.getLogger(__name__)
 
@@ -231,3 +231,20 @@ async def sync_articles(db: Session, symbols: list[str], fmp_client: FMPClient):
     except Exception as e:
         logger.error(f"Could not sync articles: {e}", exc_info=True)
         db.rollback()
+
+
+async def get_key_metrics(self, symbol: str, period: str, limit: int) -> list[KeyMetrics]:
+    logger.info(f"Fetching key metrics for {symbol}")
+    return await self.fmp_client.get_key_metrics(symbol=symbol, period=period, limit=limit)
+
+async def get_financial_ratios(self, symbol: str, period: str, limit: int) -> list[FinancialRatios]:
+    logger.info(f"Fetching financial ratios for {symbol}")
+    return await self.fmp_client.get_financial_ratios(symbol=symbol, period=period, limit=limit)
+
+async def get_key_metrics_ttm(self, symbol: str) -> KeyMetricsTTM:
+    logger.info(f"Fetching TTM key metrics for {symbol}")
+    return await self.fmp_client.get_key_metrics_ttm(symbol=symbol)
+
+async def get_financial_ratios_ttm(self, symbol: str) -> FinancialRatiosTTM:
+    logger.info(f"Fetching TTM financial ratios for {symbol}")
+    return await self.fmp_client.get_financial_ratios_ttm(symbol=symbol)

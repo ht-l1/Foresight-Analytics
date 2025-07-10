@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean, 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..core.database import Base
+from sqlalchemy import Index
 
 class Company(Base):
 # Company Profile API
@@ -26,6 +27,10 @@ class Company(Base):
     cash_flow_statements = relationship("CashFlowStatement", back_populates="company")
     revenue_segments = relationship("RevenueSegment", back_populates="company")
     predictions = relationship("MLPrediction", back_populates="company")
+    key_metrics = relationship("KeyMetrics", back_populates="company")
+    financial_ratios = relationship("FinancialRatios", back_populates="company")
+    key_metrics_ttm = relationship("KeyMetricsTTM", back_populates="company", uselist=False)
+    financial_ratios_ttm = relationship("FinancialRatiosTTM", back_populates="company", uselist=False)
 
 class IncomeStatement(Base):
     __tablename__ = 'income_statements'
@@ -220,8 +225,79 @@ class ModelPerformance(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-# Create indexes for performance
-from sqlalchemy import Index
+class KeyMetrics(Base):
+    __tablename__ = 'key_metrics'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    date = Column(Date, nullable=False, index=True)
+    period = Column(String(10), nullable=False)
+    
+    market_cap = Column(Float)
+    enterprise_value = Column(Float)
+    ev_to_sales = Column(Float)
+    ev_to_ebitda = Column(Float)
+    net_debt_to_ebitda = Column(Float)
+    current_ratio = Column(Float)
+    return_on_equity = Column(Float)
+    return_on_assets = Column(Float)
+    free_cash_flow_yield = Column(Float)
+    earnings_yield = Column(Float)
+    
+    company = relationship("Company", back_populates="key_metrics")
+    __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_key_metrics'),)
+
+class FinancialRatios(Base):
+    __tablename__ = 'financial_ratios'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    date = Column(Date, nullable=False, index=True)
+    period = Column(String(10), nullable=False)
+    
+    gross_profit_margin = Column(Float)
+    net_profit_margin = Column(Float)
+    asset_turnover = Column(Float)
+    inventory_turnover = Column(Float)
+    debt_to_equity_ratio = Column(Float)
+    price_to_earnings_ratio = Column(Float)
+    price_to_sales_ratio = Column(Float)
+    dividend_yield = Column(Float)
+    
+    company = relationship("Company", back_populates="financial_ratios")
+    __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_ratios'),)
+
+class KeyMetricsTTM(Base):
+    __tablename__ = 'key_metrics_ttm'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), unique=True, nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    
+    market_cap = Column(Float)
+    enterprise_value_ttm = Column(Float)
+    ev_to_sales_ttm = Column(Float)
+    ev_to_ebitdattm = Column(Float)
+    net_debt_to_ebitdattm = Column(Float)
+    current_ratio_ttm = Column(Float)
+    return_on_equity_ttm = Column(Float)
+    
+    company = relationship("Company", back_populates="key_metrics_ttm")
+
+class FinancialRatiosTTM(Base):
+    __tablename__ = 'financial_ratios_ttm'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), unique=True, nullable=False)
+    symbol = Column(String(10), index=True, nullable=False)
+    
+    gross_profit_margin_ttm = Column(Float)
+    net_profit_margin_ttm = Column(Float)
+    asset_turnover_ttm = Column(Float)
+    debt_to_equity_ratio_ttm = Column(Float)
+    price_to_earnings_ratio_ttm = Column(Float)
+    price_to_sales_ratio_ttm = Column(Float)
+    dividend_yield_ttm = Column(Float)
+    
+    company = relationship("Company", back_populates="financial_ratios_ttm")
 
 # Composite indexes for common queries
 Index('idx_income_statements_symbol_date', IncomeStatement.symbol, IncomeStatement.date)
@@ -230,3 +306,7 @@ Index('idx_cash_flow_statements_symbol_date', CashFlowStatement.symbol, CashFlow
 Index('idx_revenue_segments_symbol_date', RevenueSegment.symbol, RevenueSegment.date)
 Index('idx_predictions_symbol_date', MLPrediction.symbol, MLPrediction.prediction_date)
 Index('idx_news_published_sentiment', NewsArticle.published_date, NewsArticle.sentiment_score)
+Index('idx_key_metrics_symbol_date', KeyMetrics.symbol, KeyMetrics.date)
+Index('idx_financial_ratios_symbol_date', FinancialRatios.symbol, FinancialRatios.date)
+Index('idx_key_metrics_ttm_symbol', KeyMetricsTTM.symbol)
+Index('idx_financial_ratios_ttm_symbol', FinancialRatiosTTM.symbol)
