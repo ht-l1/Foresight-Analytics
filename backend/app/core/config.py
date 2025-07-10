@@ -29,13 +29,12 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     # FMP API Configuration
-    fmp_api_key: str = ""
     fmp_base_url: str = "https://financialmodelingprep.com/stable"
     fmp_rate_limit_delay: int = 1  # seconds between requests for free tier
     
     # Data fetch limits (free tier constraints)
     fmp_max_companies: int = 5  # FAANG companies
-    fmp_max_periods: int = 20   # quarters per company
+    fmp_max_periods: int = 5
     fmp_max_articles: int = 20  # articles per request
 
     # FAANG Symbol

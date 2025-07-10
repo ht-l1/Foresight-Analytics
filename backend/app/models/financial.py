@@ -34,7 +34,7 @@ class IncomeStatement(Base):
     symbol = Column(String(10), index=True, nullable=False)
     date = Column(Date, nullable=False, index=True)
     period = Column(String(10), nullable=False)
-    calendar_year = Column(String(4), nullable=False)
+    fiscal_year = Column(String(4), nullable=False)
     revenue = Column(Float)
     cost_of_revenue = Column(Float)
     gross_profit = Column(Float)
@@ -53,7 +53,7 @@ class BalanceSheetStatement(Base):
     symbol = Column(String(10), index=True, nullable=False)
     date = Column(Date, nullable=False, index=True)
     period = Column(String(10), nullable=False)
-    calendar_year = Column(String(4), nullable=False)
+    fiscal_year = Column(String(4), nullable=False)
     total_assets = Column(Float)
     total_liabilities = Column(Float)
     total_stockholders_equity = Column(Float)
@@ -69,7 +69,7 @@ class CashFlowStatement(Base):
     symbol = Column(String(10), index=True, nullable=False)
     date = Column(Date, nullable=False, index=True)
     period = Column(String(10), nullable=False)
-    calendar_year = Column(String(4), nullable=False)
+    fiscal_year = Column(String(4), nullable=False)
     net_cash_provided_by_operating_activities = Column(Float)
     net_cash_used_for_investing_activities = Column(Float)
     net_cash_used_by_financing_activities = Column(Float)
@@ -79,8 +79,6 @@ class CashFlowStatement(Base):
     __table_args__ = (UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_cash'),)
 
 class RevenueSegment(Base):
-# Revenue Product Segmentation API
-# Revenue Geographic Segments API
     __tablename__ = "revenue_segments"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -90,7 +88,7 @@ class RevenueSegment(Base):
     # Time period
     date = Column(DateTime, nullable=False, index=True)
     period = Column(String(10), nullable=False)
-    calendar_year = Column(Integer, nullable=False)
+    fiscal_Year = Column(Integer, nullable=False)
     
     # Segment information
     segment_name = Column(String(255), nullable=False)
@@ -105,6 +103,11 @@ class RevenueSegment(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
+    # Unique constraint
+    __table_args__ = (
+        UniqueConstraint('symbol', 'date', 'segment_name', name='uq_revenue_segment'),
+    )
+
     # Relationships
     company = relationship("Company", back_populates="revenue_segments")
 

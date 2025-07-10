@@ -24,7 +24,7 @@ async def sync_faang_segments(background_tasks: BackgroundTasks, db: Session = D
     from app.services.fmp_client import FMPClient
     
     async def task():
-        async with FMPClient() as fmp_client:
+        async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
             for symbol in settings.FAANG_SYMBOLS:
                 company = await data_service.get_or_create_company(db, symbol, fmp_client)
                 if company:
@@ -39,7 +39,7 @@ async def sync_faang_articles(background_tasks: BackgroundTasks, db: Session = D
     from app.services.fmp_client import FMPClient
 
     async def task():
-        async with FMPClient() as fmp_client:
+        async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
             await data_service.sync_articles(db, settings.FAANG_SYMBOLS, fmp_client)
             
     background_tasks.add_task(task)

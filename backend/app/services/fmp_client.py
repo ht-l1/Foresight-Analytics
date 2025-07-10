@@ -76,11 +76,9 @@ class FMPClient:
             raise # Re-raise after logging
 
     async def get_company_profile(self, symbol: str) -> fmp_schemas.CompanyProfile:
-        """
-        Fetches and validates the company profile for a given stock symbol.
-        """
         try:
-            data = await self._make_request(f"profile/{symbol}")
+            params = {"symbol": symbol}
+            data = await self._make_request("profile", params=params)
             if not data:
                 raise FMPAPIError(f"No profile data found for symbol: {symbol}")
             # The FMP profile endpoint returns a list containing a single object
@@ -92,46 +90,65 @@ class FMPClient:
             logger.warning(f"Could not fetch profile for {symbol}: {e.message}")
             raise
 
-    async def get_income_statement(self, symbol: str, period: str = "quarter", limit: int = 20) -> List[fmp_schemas.IncomeStatement]:
-        params = {"period": period, "limit": min(limit, settings.fmp_max_periods)}
+    async def get_income_statement(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.IncomeStatement]:
+        params = {"symbol": symbol, "period": period, "limit": limit}
         try:
-            data = await self._make_request(f"income-statement/{symbol}", params)
+            data = await self._make_request("income-statement", params)
             return [fmp_schemas.IncomeStatement.model_validate(item) for item in data]
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} IncomeStatements: {e.errors()}")
             raise DataValidationError(model="IncomeStatementList", errors=e.errors())
 
-    async def get_balance_sheet_statement(self, symbol: str, period: str = "quarter", limit: int = 20) -> List[fmp_schemas.BalanceSheetStatement]:
-        params = {"period": period, "limit": min(limit, settings.fmp_max_periods)}
+    async def get_balance_sheet_statement(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.BalanceSheetStatement]:
         try:
-            data = await self._make_request(f"balance-sheet-statement/{symbol}", params)
+            params = {"symbol": symbol, "period": period, "limit": limit}
+            data = await self._make_request("balance-sheet-statement", params)
             return [fmp_schemas.BalanceSheetStatement.model_validate(item) for item in data]
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} BalanceSheetStatements: {e.errors()}")
             raise DataValidationError(model="BalanceSheetStatementList", errors=e.errors())
 
-    async def get_cash_flow_statement(self, symbol: str, period: str = "quarter", limit: int = 20) -> List[fmp_schemas.CashFlowStatement]:
-        params = {"period": period, "limit": min(limit, settings.fmp_max_periods)}
+    async def get_cash_flow_statement(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.CashFlowStatement]:
+        params = {"symbol": symbol, "period": period, "limit": limit}
         try:
-            data = await self._make_request(f"cash-flow-statement/{symbol}", params)
+            data = await self._make_request("cash-flow-statement", params)
             return [fmp_schemas.CashFlowStatement.model_validate(item) for item in data]
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} CashFlowStatements: {e.errors()}")
             raise DataValidationError(model="CashFlowStatementList", errors=e.errors())
 
-    async def get_revenue_segments(self, symbol: str, period: str = "quarter") -> List[fmp_schemas.RevenueSegment]:
-        params = {"period": period, "structure": "flat"}
+    async def get_revenue_segments(self, symbol: str, period: str = "annual") -> List[fmp_schemas.RevenueSegment]:
+        params = {"symbol": symbol, "period": period}
         try:
-            data = await self._make_request(f"revenue-product-segmentation/{symbol}", params)
-            return [fmp_schemas.RevenueSegment.model_validate(item) for item in data]
+            raw_data = await self._make_request("revenue-product-segmentation", params)
+            segments = []
+
+            for item in raw_data:
+                base_fields = {
+                    "symbol": item["symbol"],
+                    "fiscal_Year": str(item["fiscalYear"]),
+                    "period": item["period"],
+                    "date": item["date"], 
+                }
+
+                for segment_name, segment_revenue in item.get("data", {}).items():
+                    segment = fmp_schemas.RevenueSegment(
+                        **base_fields,
+                        segment_Name=segment_name,
+                        segment_Revenue=segment_revenue,
+                    )
+                    segments.append(segment)
+
+            return segments
+
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} RevenueSegments: {e.errors()}")
             raise DataValidationError(model="RevenueSegmentList", errors=e.errors())
 
-    async def get_fmp_articles(self, page: int = 0, size: int = 10) -> List[fmp_schemas.FMPArticle]:
-        params = {"page": page, "size": size}
+    async def get_fmp_articles(self, page: int = 0, limit: int = settings.fmp_max_articles) -> List[fmp_schemas.FMPArticle]:
+        params = {"page": page, "limit": limit}
         try:
-            data = await self._make_request("press-releases/AAPL", params) # AAPL as example as required by FMP
+            data = await self._make_request("fmp-articles", params)
             return [fmp_schemas.FMPArticle.model_validate(item) for item in data]
         except ValidationError as e:
             logger.error(f"Data validation failed for FMP Articles: {e.errors()}")
