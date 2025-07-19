@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class BaseFMPModel(BaseModel):
-    class Config:
-        from_attributes = True
-        populate_by_name = True
-        extra = 'ignore'
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+        extra='ignore'
+    )
 
 class CompanyProfile(BaseFMPModel):
     symbol: str
