@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
-# Neon URL, fall bac can you explai the relationship k to local PostgreSQL
+# Neon URL, fall back to local PostgreSQL
 database_url = settings.neon_database_url or settings.database_url
 
 engine = create_engine(database_url)
