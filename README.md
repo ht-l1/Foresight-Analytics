@@ -22,7 +22,7 @@
 ## Docker 
 - `docker-compose up`
 
-## Migration
+## Migration at powershell
 - `docker-compose exec backend /bin/bash`
 - `alembic revision --autogenerate -m "Description of changes"`
 - `alembic upgrade head`

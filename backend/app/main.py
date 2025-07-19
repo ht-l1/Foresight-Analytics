@@ -4,7 +4,7 @@ from .core.config import settings
 from .api.routes import router
 
 app = FastAPI(
-    titile = settings.app_name,
+    title = settings.app_name,
     description="AI-powered finance analytics platform",
     version = "1.0.0"
 )

@@ -7,6 +7,8 @@ from pathlib import Path
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
+# Remove FIELD_MAPPINGS and FINANCIAL_DATA_CONFIG from here
+
 class Settings(BaseSettings):
     # database 
     database_url: str

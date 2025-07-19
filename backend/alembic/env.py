@@ -10,8 +10,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import models
 from app.core.database import Base
-# from app.models.financial import Company, IncomeStatement,BalanceSheetStatement, CashFlowStatement, RevenueSegment, MLPrediction, NewsArticle, ModelPerformance
-from app.models import financial
+from app.core.config import settings
+from app.models.company import Company
+from app.models.financials import IncomeStatement
 
 # Alembic Config object
 config = context.config
