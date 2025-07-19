@@ -61,7 +61,7 @@ class FMPClient:
 
     async def get_company_profile(self, symbol: str) -> fmp_schemas.CompanyProfile:
         """Get company profile data."""
-        data = await self._make_request(f"profile/{symbol}")
+        data = await self._make_request("profile", params={"symbol": symbol})
         
         if not data:
             raise HTTPException(status_code=404, detail=f"No profile data found for symbol: {symbol}")

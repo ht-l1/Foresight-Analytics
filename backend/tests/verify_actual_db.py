@@ -224,7 +224,7 @@ def diagnose_fmp_issues():
             async with FMPClient(api_key=settings.fmp_api_key) as client:
                 try:
                     # Try a simple API call
-                    response = await client._make_request("profile/AAPL")
+                    response = await client.get_company_profile("AAPL")
                     print("✅ FMP API connection successful")
                     return True
                 except Exception as e:
