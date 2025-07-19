@@ -33,6 +33,24 @@ async def get_or_create_company(db: Session, symbol: str, fmp_client: FMPClient)
     
     return company
 
+async def sync_company_profiles(db: Session, symbols: List[str]):
+    """
+    Syncs company profile data for a given list of symbols.
+    It fetches the latest profile and update existing records in the database.
+    """
+    logger.info(f"Starting company profile sync for {len(symbols)} symbols")
+    async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
+        for symbol in symbols:
+            try:
+                logger.info(f"Syncing profile for {symbol}")
+                profile_data = await fmp_client.get_company_profile(symbol)
+                create_company_from_profile(db, profile_data.model_dump())
+                logger.info(f"Successfully synced profile for {symbol}")
+            except Exception as e:
+                logger.error(f"Failed to sync profile for {symbol}: {str(e)}")
+                continue
+    logger.info("Company profile sync completed.")
+
 async def sync_income_statements(db: Session, symbols: List[str], force_refresh: bool = False):
     """Sync income statements for given symbols."""
     logger.info(f"Starting income statement sync for {len(symbols)} symbols")
