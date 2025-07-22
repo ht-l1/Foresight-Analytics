@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Brain, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-import { BackButton } from "@/src/components/ui/BackButton";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default function AIAnalysis() {
 

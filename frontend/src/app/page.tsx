@@ -1,4 +1,4 @@
-import { FinancePlatform } from "@/src/components/FinancePlatform";
+import { FinancePlatform } from "@/components/FinancePlatform";
 
 export default function HomePage() {
   return <FinancePlatform />;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brain, TrendingUp, PieChart, Newspaper } from "lucide-react";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
