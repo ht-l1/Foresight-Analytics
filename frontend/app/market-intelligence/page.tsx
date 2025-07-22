@@ -1,11 +1,12 @@
+"use client"; 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Newspaper, TrendingUp, AlertTriangle, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "@/src/components/ui/BackButton";
 
 export default function MarketIntelligence() {
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -13,15 +14,7 @@ export default function MarketIntelligence() {
       <div className="border-b">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
+            <BackButton />
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-secondary">
                 <Newspaper className="h-5 w-5 text-white" />

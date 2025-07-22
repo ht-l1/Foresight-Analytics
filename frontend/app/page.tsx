@@ -1,7 +1,5 @@
-import { FinancePlatform } from "@/components/FinancePlatform";
+import { FinancePlatform } from "@/src/components/FinancePlatform";
 
-const Index = () => {
+export default function HomePage() {
   return <FinancePlatform />;
-};
-
-export default Index;
+}
