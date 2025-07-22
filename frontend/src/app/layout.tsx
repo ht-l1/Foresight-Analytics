@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Sidebar } from '@/components/Sidebar';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/components/theme-provider'; 
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,9 +34,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen">
+          <div className="flex h-screen w-full overflow-hidden">
             <Sidebar />
-            <main className="flex-1 p-4 sm:p-6 md:p-8">
+            {/* The main content area will now handle its own scrolling */}
+            <main className="flex-1 overflow-y-auto p-4 lg:p-6">
               {children}
             </main>
           </div>

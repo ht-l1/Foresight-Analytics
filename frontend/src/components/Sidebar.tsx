@@ -2,10 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, TrendingUp, PieChart, Newspaper } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Brain,
+  TrendingUp,
+  PieChart,
+  Newspaper,
+  LayoutDashboard,
+  ChevronsLeft,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
+  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
   { href: "/predictive-modeling", icon: TrendingUp, label: "Predictive Modeling" },
   { href: "/revenue-segmentation", icon: PieChart, label: "Revenue Segmentation" },
@@ -14,34 +24,53 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground p-4">
-      <div className="mb-8">
-        <Link href="/" className="text-2xl font-bold text-sidebar-primary">
-          Foresight
+    <aside
+      className={cn(
+        "relative hidden h-screen border-r bg-muted/40 transition-all duration-300 ease-in-out md:flex flex-col",
+        isCollapsed ? "w-20" : "w-64"
+      )}
+    >
+      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
+          <span className={cn(isCollapsed ? "hidden" : "block")}>Foresight</span>
         </Link>
       </div>
-      <nav>
-        <ul>
-          {navItems.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={cn(
-                  "flex items-center p-2 rounded-md transition-colors",
-                  pathname === item.href
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "hover:bg-sidebar-accent"
-                )}
-              >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <nav className="flex-1 space-y-2 px-2 py-4 lg:px-4">
+        {navItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+              pathname === item.href && "bg-muted text-primary",
+              isCollapsed && "justify-center"
+            )}
+          >
+            <item.icon className="h-5 w-5" />
+            <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>
+              {item.label}
+            </span>
+          </Link>
+        ))}
       </nav>
+      <div className="mt-auto p-4 border-t">
+        <Button variant="ghost" size="icon" className="w-full justify-center" onClick={toggleSidebar}>
+          <ChevronsLeft
+            className={cn(
+              "h-5 w-5 transition-transform duration-300",
+              isCollapsed && "rotate-180"
+            )}
+          />
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
+      </div>
     </aside>
   );
 }
