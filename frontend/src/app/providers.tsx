@@ -18,7 +18,7 @@ export function Providers({ children, ...props }: { children: React.ReactNode } 
   const [queryClient] = useState(() => {
     const client = new QueryClient();
     // Connect to the DevTools extension, but only in development mode
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       window.__TANSTACK_QUERY_CLIENT__ = client;
     }
     return client;

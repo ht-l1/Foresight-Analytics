@@ -14,7 +14,7 @@ RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 # Copy .env.example for reference (not for production use)
-COPY .env.example /app/.env.example
+# COPY .env.example /app/.env.example
 
 # Healthcheck (optional, for Docker Compose/K8s)
 HEALTHCHECK CMD curl --fail http://localhost:8000/health || exit 1
