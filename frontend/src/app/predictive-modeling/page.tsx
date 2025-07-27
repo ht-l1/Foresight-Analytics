@@ -1,11 +1,61 @@
-"use client"; 
+"use client";
 
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, BarChart3, Target, Activity } from "lucide-react";
+import { TrendingUp, BarChart3, Target, Activity } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
+import { getIncomeStatements } from "@/lib/api";
+
+// Helper function to format large numbers
+const formatBillions = (value: number) => {
+  if (!value) return "$0.00B";
+  return `$${(value / 1_000_000_000).toFixed(2)}B`;
+};
 
 export default function PredictiveModeling() {
+  const [financials, setFinancials] = useState<any[]>([]);
+  const [growthMetrics, setGrowthMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const symbol = "AAPL"; // Using AAPL as a default
+        const incomeStatementData = await getIncomeStatements(symbol, 5); // Fetch last 5 years
+
+        if (incomeStatementData.items && incomeStatementData.items.length > 1) {
+          setFinancials(incomeStatementData.items);
+          
+          const latest = incomeStatementData.items[0];
+          const previous = incomeStatementData.items[1];
+          
+          const revenueYoY = ((latest.revenue - previous.revenue) / previous.revenue) * 100;
+
+          setGrowthMetrics({
+            latestRevenue: formatBillions(latest.revenue),
+            revenueYoY: `${revenueYoY.toFixed(1)}% YoY`,
+            netIncome: formatBillions(latest.net_income),
+            eps: `$${latest.eps.toFixed(2)}`
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch income statements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading predictive modeling data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,22 +91,30 @@ export default function PredictiveModeling() {
             <CardContent>
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary mb-1">$391.04B</div>
+                  <div className="text-2xl font-bold text-primary mb-1">
+                    {growthMetrics?.latestRevenue}
+                  </div>
                   <p className="text-sm text-muted-foreground">FY 2024 Revenue</p>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm">Revenue Growth</span>
-                    <span className="font-semibold text-green-500">+2.8% YoY</span>
+                    <span className="font-semibold text-green-500">
+                      {growthMetrics?.revenueYoY}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Net Income</span>
-                    <span className="font-semibold">$93.74B</span>
+                    <span className="font-semibold">
+                      {growthMetrics?.netIncome}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">EPS</span>
-                    <span className="font-semibold">$6.08</span>
+                    <span className="font-semibold">
+                      {growthMetrics?.eps}
+                    </span>
                   </div>
                 </div>
                 
@@ -69,7 +127,7 @@ export default function PredictiveModeling() {
             </CardContent>
           </Card>
 
-          {/* Simple Forecasting */}
+          {/* Simple Forecasting (Static for now) */}
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -104,7 +162,7 @@ export default function PredictiveModeling() {
             </CardContent>
           </Card>
 
-          {/* Key Metrics */}
+          {/* Key Metrics (Static for now) */}
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -143,13 +201,13 @@ export default function PredictiveModeling() {
             </CardContent>
           </Card>
 
-          {/* Methodology */}
+          {/* Methodology (Static for now) */}
           <Card className="shadow-card lg:col-span-3">
             <CardHeader>
               <CardTitle>Simple Forecasting Methodology</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold mb-3">Data Sources Available</h4>
                   <div className="space-y-2 text-sm">
