@@ -39,3 +39,41 @@ class IncomeStatement(Base, FinancialDataMixin, TimestampMixin):
         UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_income'),
         Index('idx_income_symbol_fiscal_year', 'symbol', 'fiscal_year'),
     ) 
+
+class FinancialRatio(Base, FinancialDataMixin, TimestampMixin):
+    __tablename__ = 'financial_ratios'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), index=True)
+    net_profit_margin = Column(Numeric(18, 4))
+    gross_profit_margin = Column(Numeric(18, 4))
+    return_on_equity = Column(Numeric(18, 4))
+    price_to_earnings_ratio = Column(Numeric(18, 4))
+    price_to_book_ratio = Column(Numeric(18, 4))
+    price_to_sales_ratio = Column(Numeric(18, 4))
+    ev_to_ebitda = Column(Numeric(18, 4))
+    debt_to_equity_ratio = Column(Numeric(18, 4))
+    current_ratio = Column(Numeric(18, 4))
+    quick_ratio = Column(Numeric(18, 4))
+    asset_turnover = Column(Numeric(18, 4))
+    inventory_turnover = Column(Numeric(18, 4))
+    
+    __table_args__ = (
+        UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_ratios'),
+    )
+
+class KeyMetric(Base, FinancialDataMixin, TimestampMixin):
+    __tablename__ = 'key_metrics'
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey('companies.id'), index=True)
+    market_cap = Column(Numeric(20, 2))
+    enterprise_value = Column(Numeric(20, 2))
+    pe_ratio = Column(Numeric(18, 4))
+    pb_ratio = Column(Numeric(18, 4))
+    dividend_yield = Column(Numeric(18, 4))
+    free_cash_flow_yield = Column(Numeric(18, 4))
+    return_on_equity = Column(Numeric(18, 4))
+    debt_to_equity = Column(Numeric(18, 4))
+
+    __table_args__ = (
+        UniqueConstraint('symbol', 'date', 'period', name='_symbol_date_period_uc_metrics'),
+    )
