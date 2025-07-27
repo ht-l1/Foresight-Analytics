@@ -1,11 +1,68 @@
 "use client"; 
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Brain, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
+import { getCompanyProfile, getIncomeStatements } from "@/lib/api";
 
 export default function AIAnalysis() {
+  const [profile, setProfile] = useState<any>(null);
+  const [financials, setFinancials] = useState<any>(null);
+  const [ratios, setRatios] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const symbol = "AAPL"; // Using AAPL as a default for now
+        const profileData = await getCompanyProfile(symbol);
+        const incomeStatementData = await getIncomeStatements(symbol, 1);
+
+        setProfile(profileData);
+
+        if (incomeStatementData.items && incomeStatementData.items.length > 0) {
+          const latestStatement = incomeStatementData.items[0];
+          setFinancials(latestStatement);
+
+          // Calculate ratios
+          const grossMargin = (latestStatement.gross_profit / latestStatement.revenue) * 100;
+          const operatingMargin = (latestStatement.operating_income / latestStatement.revenue) * 100;
+          const netMargin = (latestStatement.net_income / latestStatement.revenue) * 100;
+          const peRatio = profileData.price / latestStatement.eps;
+          const psRatio = profileData.market_cap / latestStatement.revenue;
+
+          setRatios({
+            grossProfitMargin: grossMargin.toFixed(2),
+            operatingMargin: operatingMargin.toFixed(2),
+            netProfitMargin: netMargin.toFixed(2),
+            peRatio: peRatio.toFixed(2),
+            psRatio: psRatio.toFixed(2),
+            // Placeholders for data not yet available from the current implemented endpoints
+            returnOnEquity: "164.59", // Placeholder
+            pbRatio: "61.37", // Placeholder
+            evToEbitda: "26.62", // Placeholder
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch financial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading financial data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,19 +100,19 @@ export default function AIAnalysis() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm">Gross Profit Margin</span>
-                    <span className="font-semibold text-green-500">46.21%</span>
+                    <span className="font-semibold text-green-500">{ratios?.grossProfitMargin}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Operating Margin</span>
-                    <span className="font-semibold text-primary">31.51%</span>
+                    <span className="font-semibold text-primary">{ratios?.operatingMargin}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Net Profit Margin</span>
-                    <span className="font-semibold text-accent">23.97%</span>
+                    <span className="font-semibold text-accent">{ratios?.netProfitMargin}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Return on Equity</span>
-                    <span className="font-semibold text-green-500">164.59%</span>
+                    <span className="font-semibold text-green-500">{ratios?.returnOnEquity}%</span>
                   </div>
                 </div>
                 <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
@@ -79,19 +136,19 @@ export default function AIAnalysis() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm">P/E Ratio</span>
-                  <span className="font-semibold">37.29x</span>
+                  <span className="font-semibold">{ratios?.peRatio}x</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">P/S Ratio</span>
-                  <span className="font-semibold">8.94x</span>
+                  <span className="font-semibold">{ratios?.psRatio}x</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">P/B Ratio</span>
-                  <span className="font-semibold">61.37x</span>
+                  <span className="font-semibold">{ratios?.pbRatio}x</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">EV/EBITDA</span>
-                  <span className="font-semibold">26.62x</span>
+                  <span className="font-semibold">{ratios?.evToEbitda}x</span>
                 </div>
                 
                 <div className="pt-3 border-t space-y-2">
@@ -113,9 +170,8 @@ export default function AIAnalysis() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Financial Health */}
-          <Card className="shadow-card lg:col-span-2">
+            {/* Financial Health Card remains unchanged for now */}
+            <Card className="shadow-card lg:col-span-2">
             <CardHeader>
               <CardTitle>Financial Health Assessment</CardTitle>
             </CardHeader>
