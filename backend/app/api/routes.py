@@ -5,6 +5,9 @@ from ..core.database import get_db
 from app.services.business_service import (
     get_company_profile,
     get_income_statements,
+    get_key_metrics,
+    get_financial_ratios,
+    get_stock_news,
 )
 import logging
 
@@ -13,9 +16,13 @@ logger = logging.getLogger(__name__)
 
 class FinancialDataType(str, Enum):
     income_statements = "income-statements"
+    key_metrics = "key-metrics"
+    ratios = "ratios"
 
 DATA_TYPE_TO_SERVICE = {
     FinancialDataType.income_statements: get_income_statements,
+    FinancialDataType.key_metrics: get_key_metrics,
+    FinancialDataType.ratios: get_financial_ratios,
 }
 
 @router.get("/company/{symbol}")
@@ -36,3 +43,8 @@ def financials_paginated(
     if not service_func:
         raise HTTPException(status_code=400, detail=f"Invalid data type: {data_type}")
     return service_func(db, symbol, skip, limit)
+
+@router.get("/news/{symbol}")
+def stock_news(symbol: str, limit: int = Query(20, ge=1, le=50), db: Session = Depends(get_db)):
+    """Get latest news articles for a symbol."""
+    return get_stock_news(db, symbol, limit)

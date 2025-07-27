@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from datetime import datetime
 from ..models.financials import IncomeStatement, FinancialRatio, KeyMetric 
-from ..schemas.fmp_schemas import FMPIncomeStatement, FinancialRatios, KeyMetrics
+from ..schemas.fmp_schemas import IncomeStatement, FinancialRatios, KeyMetrics
 
 def upsert_income_statements(db: Session, income_statements: List[Dict]):
     """Insert or update income statements."""

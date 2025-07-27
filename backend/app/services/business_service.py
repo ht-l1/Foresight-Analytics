@@ -1,15 +1,17 @@
 import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from app.services.fmp_client import FMPClient
-from app.crud.crud_company import get_company_by_symbol, create_company_from_profile, create_minimal_company
-from app.crud.crud_financials import upsert_income_statements
-from app.models.company import Company
-from app.models.financials import IncomeStatement
 from app.core.config import settings
 from typing import List, Dict, Any
 from fastapi import HTTPException
 from datetime import datetime
+from app.services.fmp_client import FMPClient
+from app.crud.crud_company import get_company_by_symbol, create_company_from_profile, create_minimal_company
+from app.crud.crud_financials import upsert_income_statements, create_financial_ratios, create_key_metrics
+from app.crud.crud_news import create_article, get_articles_by_symbol
+from app.models.company import Company
+from app.models.financials import IncomeStatement, KeyMetric, FinancialRatio
+from app.models.news import NewsArticle
 
 logger = logging.getLogger(__name__)
 
@@ -168,3 +170,46 @@ def get_income_statements(db: Session, symbol: str, skip: int = 0, limit: int = 
         "limit": limit,
         "has_more": skip + limit < total
     }
+
+def get_key_metrics(db: Session, symbol: str, skip: int = 0, limit: int = 20) -> Dict[str, Any]:
+    """Get paginated key metrics for a symbol."""
+    total = db.query(KeyMetric).filter(KeyMetric.symbol == symbol).count()
+    metrics = (
+        db.query(KeyMetric)
+        .filter(KeyMetric.symbol == symbol)
+        .order_by(desc(KeyMetric.date))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    if not metrics:
+        raise HTTPException(status_code=404, detail=f"No key metrics found for symbol {symbol}")
+    return {
+        "items": [m.__dict__ for m in metrics],
+        "total": total, "skip": skip, "limit": limit
+    }
+
+def get_financial_ratios(db: Session, symbol: str, skip: int = 0, limit: int = 20) -> Dict[str, Any]:
+    """Get paginated financial ratios for a symbol."""
+    total = db.query(FinancialRatio).filter(FinancialRatio.symbol == symbol).count()
+    ratios = (
+        db.query(FinancialRatio)
+        .filter(FinancialRatio.symbol == symbol)
+        .order_by(desc(FinancialRatio.date))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    if not ratios:
+        raise HTTPException(status_code=404, detail=f"No financial ratios found for symbol {symbol}")
+    return {
+        "items": [r.__dict__ for r in ratios],
+        "total": total, "skip": skip, "limit": limit
+    }
+
+def get_stock_news(db: Session, symbol: str, limit: int = 20) -> List[Dict[str, Any]]:
+    """Get stock news from the database."""
+    articles = get_articles_by_symbol(db, symbol, limit)
+    if not articles:
+        raise HTTPException(status_code=404, detail=f"No news found for symbol {symbol}")
+    return [article.__dict__ for article in articles]

@@ -83,20 +83,32 @@ class FMPClient:
             logger.error(f"Data validation failed for {symbol} IncomeStatement: {e.errors()}")
             raise HTTPException(status_code=422, detail="Invalid data format from FMP API")
         
-    async def get_financial_ratios(self, symbol: str, period: str = 'annual', limit: int = 40) -> list[dict]:
-        """
-        Fetches financial ratios from FMP API.
-        """
-        return await self._get(f"v3/ratios/{symbol}", params={"period": period, "limit": limit})
+    async def get_financial_ratios(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.FinancialRatios]:
+        """Get financial ratios data."""
+        params = {"period": period, "limit": limit}
+        data = await self._make_request(f"ratios/{symbol}", params)
+        try:
+            return [fmp_schemas.FinancialRatios.model_validate(item) for item in data]
+        except ValidationError as e:
+            logger.error(f"Data validation failed for {symbol} FinancialRatios: {e.errors()}")
+            raise HTTPException(status_code=422, detail="Invalid data format from FMP API for Ratios")
 
-    async def get_key_metrics(self, symbol: str, period: str = 'annual', limit: int = 40) -> list[dict]:
-        """
-        Fetches key metrics from FMP API.
-        """
-        return await self._get(f"v3/key-metrics/{symbol}", params={"period": period, "limit": limit})
+    async def get_key_metrics(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.KeyMetrics]:
+        """Get key metrics data."""
+        params = {"period": period, "limit": limit}
+        data = await self._make_request(f"key-metrics/{symbol}", params)
+        try:
+            return [fmp_schemas.KeyMetrics.model_validate(item) for item in data]
+        except ValidationError as e:
+            logger.error(f"Data validation failed for {symbol} KeyMetrics: {e.errors()}")
+            raise HTTPException(status_code=422, detail="Invalid data format from FMP API for Key Metrics")
 
-    async def get_stock_news(self, tickers: str, limit: int = 50) -> list[dict]:
-        """
-        Fetches stock news from FMP API.
-        """
-        return await self._get("v3/stock_news", params={"tickers": tickers, "limit": limit})
+    async def get_stock_news(self, symbol: str, limit: int = 20) -> List[fmp_schemas.FMPArticle]:
+        """Get stock news articles."""
+        params = {"tickers": symbol, "limit": limit}
+        data = await self._make_request("stock_news", params)
+        try:
+            return [fmp_schemas.FMPArticle.model_validate(item) for item in data]
+        except ValidationError as e:
+            logger.error(f"Data validation failed for {symbol} FMPArticle: {e.errors()}")
+            raise HTTPException(status_code=422, detail="Invalid data format from FMP API for News")
