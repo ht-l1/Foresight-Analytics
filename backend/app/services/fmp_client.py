@@ -85,8 +85,8 @@ class FMPClient:
         
     async def get_financial_ratios(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.FinancialRatios]:
         """Get financial ratios data."""
-        params = {"period": period, "limit": limit}
-        data = await self._make_request(f"ratios/{symbol}", params)
+        params = {"symbol": symbol, "period": period, "limit": limit}
+        data = await self._make_request("ratios", params)
         try:
             return [fmp_schemas.FinancialRatios.model_validate(item) for item in data]
         except ValidationError as e:
@@ -95,8 +95,8 @@ class FMPClient:
 
     async def get_key_metrics(self, symbol: str, period: str = "annual", limit: int = 5) -> List[fmp_schemas.KeyMetrics]:
         """Get key metrics data."""
-        params = {"period": period, "limit": limit}
-        data = await self._make_request(f"key-metrics/{symbol}", params)
+        params = {"symbol": symbol, "period": period, "limit": limit}
+        data = await self._make_request("key-metrics", params)
         try:
             return [fmp_schemas.KeyMetrics.model_validate(item) for item in data]
         except ValidationError as e:
@@ -106,9 +106,26 @@ class FMPClient:
     async def get_stock_news(self, symbol: str, limit: int = 20) -> List[fmp_schemas.FMPArticle]:
         """Get stock news articles."""
         params = {"tickers": symbol, "limit": limit}
-        data = await self._make_request("stock_news", params)
+        
+        try:
+            data = await self._make_request("stock_news", params)
+        except HTTPException as e:
+            if e.status_code == 404:
+                try:
+                    logger.warning(f"Trying alternative news endpoint for {symbol}")
+                    data = await self._make_request(f"stock_news/{symbol}", {"limit": limit})
+                except HTTPException:
+                    logger.warning(f"Trying general news endpoint for {symbol}")
+                    data = await self._make_request("general_news", {"tickers": symbol, "limit": limit})
+            else:
+                raise
+        
+        if not data:
+            logger.warning(f"No news data found for {symbol}")
+            return []
+        
         try:
             return [fmp_schemas.FMPArticle.model_validate(item) for item in data]
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} FMPArticle: {e.errors()}")
-            raise HTTPException(status_code=422, detail="Invalid data format from FMP API for News")
+            return []  # Return empty list instead of raising exception

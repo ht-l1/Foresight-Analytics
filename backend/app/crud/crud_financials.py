@@ -1,69 +1,70 @@
 from sqlalchemy.orm import Session
 from typing import List, Dict
 from datetime import datetime
-from ..models.financials import IncomeStatement, FinancialRatio, KeyMetric 
-from ..schemas.fmp_schemas import IncomeStatement, FinancialRatios, KeyMetrics
+from ..models.financials import IncomeStatement as IncomeStatementModel, FinancialRatio, KeyMetric
+from ..schemas.fmp_schemas import IncomeStatement as FMPIncomeStatement, FinancialRatios, KeyMetrics
 
-def upsert_income_statements(db: Session, income_statements: List[Dict]):
-    """Insert or update income statements."""
-    if not income_statements:
-        return
-    
-    for data in income_statements:
-        # Convert date string to date object if it's a string
-        if 'date' in data and isinstance(data['date'], str):
-            data['date'] = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        
-        # Check if record exists
-        existing = db.query(IncomeStatement).filter_by(
-            symbol=data['symbol'], 
-            date=data['date'], 
-            period=data['period']
+def upsert_income_statements(db: Session, statements: List[Dict], company_id: int, symbol: str):
+    """
+    Upserts (updates or inserts) income statement records from processed data dictionaries.
+    """
+    for data_dict in statements:
+        existing = db.query(IncomeStatementModel).filter_by(
+            symbol=symbol, 
+            date=data_dict['date'], 
+            period=data_dict['period']
+        ).first()
+
+        if existing:
+            # Update existing record
+            for key, value in data_dict.items():
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
+        else:
+            # Create new record
+            new_statement = IncomeStatementModel(**data_dict)
+            db.add(new_statement)
+
+    db.commit()
+
+def upsert_financial_ratios(db: Session, ratios: List[Dict], company_id: int, symbol: str):
+    """
+    Upserts financial ratio records.
+    """
+    for data_dict in ratios:
+        existing = db.query(FinancialRatio).filter_by(
+            symbol=symbol,
+            date=data_dict['date'],
+            period=data_dict['period']
         ).first()
         
         if existing:
-            # Update existing record
-            for key, value in data.items():
-                setattr(existing, key, value)
+            for key, value in data_dict.items():
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
         else:
-            # Create new record
-            income_statement = IncomeStatement(**data)
-            db.add(income_statement)
+            new_ratio = FinancialRatio(**data_dict)
+            db.add(new_ratio)
     
     db.commit()
 
-def create_financial_ratios(db: Session, ratios: list[FinancialRatios], company_id: int, symbol: str) -> list[FinancialRatio]:
+def upsert_key_metrics(db: Session, metrics: List[Dict], company_id: int, symbol: str):
     """
-    Creates new financial ratio records in bulk.
+    Upserts key metric records.
     """
-    db_ratios = [
-        FinancialRatio(
-            company_id=company_id,
+    for data_dict in metrics:
+        existing = db.query(KeyMetric).filter_by(
             symbol=symbol,
-            date=item.date,
-            period=item.period,
-            **item.model_dump(exclude={'symbol', 'date', 'period'}, by_alias=False)
-        )
-        for item in ratios
-    ]
-    db.bulk_save_objects(db_ratios)
+            date=data_dict['date'],
+            period=data_dict['period']
+        ).first()
+        
+        if existing:
+            for key, value in data_dict.items():
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
+        else:
+            new_metric = KeyMetric(**data_dict)
+            db.add(new_metric)
+    
     db.commit()
-    return db_ratios
-
-def create_key_metrics(db: Session, metrics: list[KeyMetrics], company_id: int, symbol: str) -> list[KeyMetric]:
-    """
-    Creates new key metric records in bulk.
-    """
-    db_metrics = [
-        KeyMetric(
-            company_id=company_id,
-            symbol=symbol,
-            date=item.date,
-            period=item.period,
-            **item.model_dump(exclude={'symbol', 'date', 'period'}, by_alias=False)
-        )
-        for item in metrics
-    ]
-    db.bulk_save_objects(db_metrics)
-    db.commit()
-    return db_metrics
