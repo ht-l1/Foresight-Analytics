@@ -47,3 +47,43 @@ class IncomeStatement(BaseFMPModel):
     ebitda: float | None = None
     ebit: float | None = None
     depreciation_and_amortization: float | None = Field(None, alias="depreciationAndAmortization")
+
+class FinancialRatios(BaseFMPModel):
+    symbol: str
+    date: str
+    period: str
+    net_profit_margin: Optional[float] = Field(None, alias="netProfitMargin")
+    gross_profit_margin: Optional[float] = Field(None, alias="grossProfitMargin")
+    return_on_equity: Optional[float] = Field(None, alias="returnOnEquity")
+    price_to_earnings_ratio: Optional[float] = Field(None, alias="priceToEarningsRatio")
+    price_to_book_ratio: Optional[float] = Field(None, alias="priceToBookRatio")
+    price_to_sales_ratio: Optional[float] = Field(None, alias="priceToSalesRatio")
+    ev_to_ebitda: Optional[float] = Field(None, alias="enterpriseValueMultiple")
+    debt_to_equity_ratio: Optional[float] = Field(None, alias="debtToEquityRatio")
+    current_ratio: Optional[float] = Field(None, alias="currentRatio")
+    quick_ratio: Optional[float] = Field(None, alias="quickRatio")
+    asset_turnover: Optional[float] = Field(None, alias="assetTurnover")
+    inventory_turnover: Optional[float] = Field(None, alias="inventoryTurnover")
+
+class KeyMetrics(BaseFMPModel):
+    symbol: str
+    date: str
+    period: str
+    market_cap: Optional[float] = Field(None, alias="marketCap")
+    enterprise_value: Optional[float] = Field(None, alias="enterpriseValue")
+    pe_ratio: Optional[float] = Field(None, alias="peRatio")
+    pb_ratio: Optional[float] = Field(None, alias="pbRatio")
+    dividend_yield: Optional[float] = Field(None, alias="dividendYield")
+    free_cash_flow_yield: Optional[float] = Field(None, alias="freeCashFlowYield")
+    return_on_equity: Optional[float] = Field(None, alias="returnOnEquity")
+    debt_to_equity: Optional[float] = Field(None, alias="debtToEquity")
+
+class FMPArticle(BaseFMPModel):
+    title: str
+    date: str
+    content: str
+    tickers: str
+    image: str
+    link: str
+    author: str
+    site: str

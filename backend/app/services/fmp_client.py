@@ -82,3 +82,21 @@ class FMPClient:
         except ValidationError as e:
             logger.error(f"Data validation failed for {symbol} IncomeStatement: {e.errors()}")
             raise HTTPException(status_code=422, detail="Invalid data format from FMP API")
+        
+    async def get_financial_ratios(self, symbol: str, period: str = 'annual', limit: int = 40) -> list[dict]:
+        """
+        Fetches financial ratios from FMP API.
+        """
+        return await self._get(f"v3/ratios/{symbol}", params={"period": period, "limit": limit})
+
+    async def get_key_metrics(self, symbol: str, period: str = 'annual', limit: int = 40) -> list[dict]:
+        """
+        Fetches key metrics from FMP API.
+        """
+        return await self._get(f"v3/key-metrics/{symbol}", params={"period": period, "limit": limit})
+
+    async def get_stock_news(self, tickers: str, limit: int = 50) -> list[dict]:
+        """
+        Fetches stock news from FMP API.
+        """
+        return await self._get("v3/stock_news", params={"tickers": tickers, "limit": limit})

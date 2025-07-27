@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from app.models.financials import IncomeStatement
 from typing import List, Dict
 from datetime import datetime
+from ..models.financials import IncomeStatement, FinancialRatio, KeyMetric 
+from ..schemas.fmp_schemas import FMPIncomeStatement, FinancialRatios, KeyMetrics
 
 def upsert_income_statements(db: Session, income_statements: List[Dict]):
     """Insert or update income statements."""
@@ -30,3 +31,39 @@ def upsert_income_statements(db: Session, income_statements: List[Dict]):
             db.add(income_statement)
     
     db.commit()
+
+def create_financial_ratios(db: Session, ratios: list[FinancialRatios], company_id: int, symbol: str) -> list[FinancialRatio]:
+    """
+    Creates new financial ratio records in bulk.
+    """
+    db_ratios = [
+        FinancialRatio(
+            company_id=company_id,
+            symbol=symbol,
+            date=item.date,
+            period=item.period,
+            **item.model_dump(exclude={'symbol', 'date', 'period'}, by_alias=False)
+        )
+        for item in ratios
+    ]
+    db.bulk_save_objects(db_ratios)
+    db.commit()
+    return db_ratios
+
+def create_key_metrics(db: Session, metrics: list[KeyMetrics], company_id: int, symbol: str) -> list[KeyMetric]:
+    """
+    Creates new key metric records in bulk.
+    """
+    db_metrics = [
+        KeyMetric(
+            company_id=company_id,
+            symbol=symbol,
+            date=item.date,
+            period=item.period,
+            **item.model_dump(exclude={'symbol', 'date', 'period'}, by_alias=False)
+        )
+        for item in metrics
+    ]
+    db.bulk_save_objects(db_metrics)
+    db.commit()
+    return db_metrics
