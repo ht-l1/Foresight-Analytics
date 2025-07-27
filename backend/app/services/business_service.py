@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from datetime import datetime
 from app.services.fmp_client import FMPClient
 from app.crud.crud_company import get_company_by_symbol, create_company_from_profile, create_minimal_company
-from app.crud.crud_financials import upsert_income_statements, create_financial_ratios, create_key_metrics
+from app.crud.crud_financials import upsert_income_statements, upsert_financial_ratios, upsert_key_metrics
 from app.crud.crud_news import create_article, get_articles_by_symbol
 from app.models.company import Company
 from app.models.financials import IncomeStatement, KeyMetric, FinancialRatio
@@ -81,13 +81,16 @@ async def sync_income_statements(db: Session, symbols: List[str], force_refresh:
                 for statement in income_statements:
                     statement_dict = statement.model_dump()
                     statement_dict['company_id'] = company.id
-                    # Convert date string to date object
-                    if 'date' in statement_dict:
+                    statement_dict['symbol'] = symbol
+                    
+                    # Convert date string to date object if needed
+                    if isinstance(statement_dict.get('date'), str):
                         statement_dict['date'] = datetime.strptime(statement_dict['date'], '%Y-%m-%d').date()
+                    
                     statements_to_insert.append(statement_dict)
                 
-                # Insert/update in database
-                upsert_income_statements(db, statements_to_insert)
+                # Insert/update in database with correct parameters
+                upsert_income_statements(db, statements_to_insert, company.id, symbol)
                 logger.info(f"Successfully synced {len(statements_to_insert)} income statements for {symbol}")
                 
             except Exception as e:
@@ -95,6 +98,82 @@ async def sync_income_statements(db: Session, symbols: List[str], force_refresh:
                 continue
     
     logger.info("Income statement sync completed")
+
+async def sync_key_metrics(db: Session, symbols: List[str]):
+    """Syncs key metrics for given symbols."""
+    logger.info(f"Starting key metrics sync for {len(symbols)} symbols")
+    async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
+        for symbol in symbols:
+            try:
+                company = await get_or_create_company(db, symbol, fmp_client)
+                metrics_data = await fmp_client.get_key_metrics(symbol, limit=settings.fmp_max_periods)
+                
+                if metrics_data:
+                    # Prepare data for database
+                    metrics_to_insert = []
+                    for metric in metrics_data:
+                        metric_dict = metric.model_dump()
+                        metric_dict['company_id'] = company.id
+                        metric_dict['symbol'] = symbol
+                        
+                        # Convert date string to date object if needed
+                        if isinstance(metric_dict.get('date'), str):
+                            metric_dict['date'] = datetime.strptime(metric_dict['date'], '%Y-%m-%d').date()
+                        
+                        metrics_to_insert.append(metric_dict)
+                    
+                    upsert_key_metrics(db, metrics_to_insert, company.id, symbol)
+                    logger.info(f"Successfully synced {len(metrics_to_insert)} key metrics for {symbol}")
+            except Exception as e:
+                logger.error(f"Failed to sync key metrics for {symbol}: {e}")
+    logger.info("Key metrics sync completed.")
+
+async def sync_financial_ratios(db: Session, symbols: List[str]):
+    """Syncs financial ratios for given symbols."""
+    logger.info(f"Starting financial ratios sync for {len(symbols)} symbols")
+    async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
+        for symbol in symbols:
+            try:
+                company = await get_or_create_company(db, symbol, fmp_client)
+                ratios_data = await fmp_client.get_financial_ratios(symbol, limit=settings.fmp_max_periods)
+                
+                if ratios_data:
+                    # Prepare data for database
+                    ratios_to_insert = []
+                    for ratio in ratios_data:
+                        ratio_dict = ratio.model_dump()
+                        ratio_dict['company_id'] = company.id
+                        ratio_dict['symbol'] = symbol
+                        
+                        # Convert date string to date object if needed
+                        if isinstance(ratio_dict.get('date'), str):
+                            ratio_dict['date'] = datetime.strptime(ratio_dict['date'], '%Y-%m-%d').date()
+                        
+                        ratios_to_insert.append(ratio_dict)
+                    
+                    upsert_financial_ratios(db, ratios_to_insert, company.id, symbol)
+                    logger.info(f"Successfully synced {len(ratios_to_insert)} financial ratios for {symbol}")
+            except Exception as e:
+                logger.error(f"Failed to sync financial ratios for {symbol}: {e}")
+    logger.info("Financial ratios sync completed.")
+
+async def sync_stock_news(db: Session, symbols: List[str]):
+    """Syncs news articles for given symbols."""
+    logger.info(f"Starting stock news sync for {len(symbols)} symbols")
+    async with FMPClient(api_key=settings.fmp_api_key) as fmp_client:
+        for symbol in symbols:
+            try:
+                articles_data = await fmp_client.get_stock_news(symbol, limit=settings.fmp_max_articles)
+                if articles_data:
+                    for article_data in articles_data:
+                        # Check if article already exists to avoid duplicates
+                        existing = db.query(NewsArticle).filter_by(url=article_data.link).first()
+                        if not existing:
+                            create_article(db, article_data, symbol)
+                    logger.info(f"Successfully synced news for {symbol}")
+            except Exception as e:
+                logger.error(f"Failed to sync news for {symbol}: {e}")
+    logger.info("Stock news sync completed.")
 
 # SERVICE FUNCTIONS FOR ROUTES
 def get_company_profile(db: Session, symbol: str) -> Dict[str, Any]:
