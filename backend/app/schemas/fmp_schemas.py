@@ -53,6 +53,7 @@ class FinancialRatios(BaseFMPModel):
     symbol: str
     date: str
     period: str
+    fiscal_year: str = Field(alias="fiscalYear")
     net_profit_margin: Optional[float] = Field(None, alias="netProfitMargin")
     gross_profit_margin: Optional[float] = Field(None, alias="grossProfitMargin")
     return_on_equity: Optional[float] = Field(None, alias="returnOnEquity")
@@ -70,6 +71,7 @@ class KeyMetrics(BaseFMPModel):
     symbol: str
     date: str
     period: str
+    fiscal_year: str = Field(alias="fiscalYear")
     market_cap: Optional[float] = Field(None, alias="marketCap")
     enterprise_value: Optional[float] = Field(None, alias="enterpriseValue")
     pe_ratio: Optional[float] = Field(None, alias="peRatio")
